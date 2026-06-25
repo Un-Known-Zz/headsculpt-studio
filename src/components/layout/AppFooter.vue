@@ -13,10 +13,6 @@
           <router-link to="/products">{{ t('nav.products') }}</router-link>
           <router-link to="/contact">{{ t('nav.contact') }}</router-link>
         </div>
-        <!-- <div class="footer-col">
-          <h4>{{ t('footer.services') }}</h4>
-          <router-link v-for="s in serviceItems" :key="s" to="/contact">{{ s }}</router-link>
-        </div> -->
         <div class="footer-col">
           <h4>{{ t('footer.contact') }}</h4>
           <a href="mailto:hello@headsculpt.studio">hello@headsculpt.studio</a>
@@ -25,15 +21,13 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>{{ t('footer.copyright') }} 1.02</span>
+        <span>{{ t('footer.copyright') }} 1.04</span>
       </div>
     </div>
   </footer>
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-const { t, tm } = useI18n()
-const serviceItems = computed(() => tm('footer.serviceItems'))
+const { t } = useI18n()
 </script>

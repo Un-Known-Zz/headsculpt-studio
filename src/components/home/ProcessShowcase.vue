@@ -18,6 +18,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-const { t, tm } = useI18n()
-const processSteps = computed(() => tm('home.processSteps'))
+const { t } = useI18n()
+const processSteps = computed(() => t('home.processSteps'))
 </script>

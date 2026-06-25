@@ -11,6 +11,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-const { t, tm } = useI18n()
-const partners = computed(() => tm('home.partners'))
+const { t } = useI18n()
+const partners = computed(() => t('home.partners'))
 </script>

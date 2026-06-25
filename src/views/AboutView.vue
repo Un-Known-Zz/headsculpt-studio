@@ -62,11 +62,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-const { t, tm } = useI18n()
+const { t } = useI18n()
 const baseUrl = import.meta.env.BASE_URL
-const aboutStats = computed(() => tm('about.stats'))
-const processSteps = computed(() => tm('about.processSteps'))
-const processDescs = computed(() => tm('about.processDescs'))
-const team = computed(() => tm('about.team'))
-const equipment = computed(() => tm('about.equipment'))
+const aboutStats = computed(() => t('about.stats'))
+const processSteps = computed(() => t('about.processSteps'))
+const processDescs = computed(() => t('about.processDescs'))
+const team = computed(() => t('about.team'))
+const equipment = computed(() => t('about.equipment'))
 </script>

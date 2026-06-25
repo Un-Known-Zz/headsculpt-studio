@@ -39,9 +39,9 @@ import ProcessShowcase from '@/components/home/ProcessShowcase.vue'
 import VideoGallery from '@/components/home/VideoGallery.vue'
 import PartnerSection from '@/components/home/PartnerSection.vue'
 
-const { t, tm } = useI18n()
-const stats = computed(() => tm('home.stats'))
-const statsLabel = computed(() => tm('home.statsLabel'))
+const { t } = useI18n()
+const stats = computed(() => t('home.stats'))
+const statsLabel = computed(() => t('home.statsLabel'))
 
 const openProductModal = inject('openProductModal')
 const openVideoModal = inject('openVideoModal')
