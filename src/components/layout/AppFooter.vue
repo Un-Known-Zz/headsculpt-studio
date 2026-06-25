@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>{{ t('footer.copyright') }} 1.03</span>
+        <span>{{ t('footer.copyright') }} 1.02</span>
       </div>
     </div>
   </footer>
