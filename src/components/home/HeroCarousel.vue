@@ -24,9 +24,9 @@
     </div>
     <button class="carousel-arrow carousel-arrow-prev" @click="prev">‹</button>
     <button class="carousel-arrow carousel-arrow-next" @click="next">›</button>
-    <div class="scroll-indicator">
+    <!-- <div class="scroll-indicator">
       <span class="scroll-indicator-arrow bounce-down">↓</span>
-    </div>
+    </div> -->
   </section>
 </template>
 

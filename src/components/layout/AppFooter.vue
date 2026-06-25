@@ -13,10 +13,10 @@
           <router-link to="/products">{{ t('nav.products') }}</router-link>
           <router-link to="/contact">{{ t('nav.contact') }}</router-link>
         </div>
-        <div class="footer-col">
+        <!-- <div class="footer-col">
           <h4>{{ t('footer.services') }}</h4>
           <router-link v-for="s in serviceItems" :key="s" to="/contact">{{ s }}</router-link>
-        </div>
+        </div> -->
         <div class="footer-col">
           <h4>{{ t('footer.contact') }}</h4>
           <a href="mailto:hello@headsculpt.studio">hello@headsculpt.studio</a>

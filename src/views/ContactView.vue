@@ -4,18 +4,13 @@
     <section class="section" style="padding-top:48px">
       <div class="container"><div class="section-header"><h1>{{ t('contact.title') }}</h1><p>{{ t('contact.sub') }}</p></div></div>
     </section>
-    <section class="section-sm" style="padding-bottom:0">
+    <section class="section-sm" style="padding-top:0">
       <div class="container">
         <div class="contact-info-grid">
           <div class="contact-info-card"><div class="contact-info-icon">📍</div><h4>{{ t('contact.info.address') }}</h4><p>{{ t('contact.info.addressVal') }}</p></div>
           <div class="contact-info-card"><div class="contact-info-icon">📞</div><h4>{{ t('contact.info.phone') }}</h4><p>{{ t('contact.info.phoneVal') }}</p></div>
           <div class="contact-info-card"><div class="contact-info-icon">✉️</div><h4>{{ t('contact.info.email') }}</h4><p>{{ t('contact.info.emailVal') }}</p></div>
         </div>
-      </div>
-    </section>
-    <section class="section-sm">
-      <div class="container text-center" style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap">
-        <a v-for="s in social" :key="s" href="#" class="btn btn-ghost btn-md">{{ s }}</a>
       </div>
     </section>
     <section class="section" style="background:var(--bg-primary)">

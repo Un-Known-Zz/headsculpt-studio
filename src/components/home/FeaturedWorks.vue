@@ -16,9 +16,9 @@
           </div>
         </div>
       </div>
-      <div class="text-center mt-lg">
+      <!-- <div class="text-center mt-lg">
         <router-link to="/products" class="btn btn-secondary btn-lg">{{ t('home.featuredCta') }}</router-link>
-      </div>
+      </div> -->
     </div>
   </section>
 </template>

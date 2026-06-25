@@ -25,7 +25,7 @@
         </div>
       </div>
     </section>
-    <section class="section" style="background:var(--bg-primary)">
+    <!-- <section class="section" style="background:var(--bg-primary)">
       <div class="container">
         <div class="section-header"><h2>{{ t('about.teamTitle') }}</h2><p>{{ t('about.teamSub') }}</p></div>
         <div class="grid grid-4">
@@ -35,7 +35,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
     <section class="section">
       <div class="container">
         <div class="section-header"><h2>{{ t('about.equipTitle') }}</h2><p>{{ t('about.equipSub') }}</p></div>
