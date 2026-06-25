@@ -34,18 +34,19 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+const baseUrl = import.meta.env.BASE_URL
 
 const carouselRef = ref(null)
 const current = ref(0)
 let timer = null
 
 const slides = [
-  { video: '/VIDEO/1.mp4', poster: '/IMG/2.jpg', title: t('home.slide1Title'), desc: t('home.slide1Desc'), link: '/products' },
-  { img: '/IMG/4.jpg', title: t('home.slide2Title'), desc: t('home.slide2Desc'), link: '/products' },
-  { img: '/IMG/5.jpg', title: t('home.slide3Title'), desc: t('home.slide3Desc'), link: '/products' },
-  { video: '/VIDEO/2.mp4', poster: '/IMG/3.jpg', title: t('home.slide4Title'), desc: t('home.slide4Desc'), link: '/about', btnText: t('home.slide6Cta') },
-  { video: '/VIDEO/3.mp4', poster: '/IMG/6.jpg', title: t('home.slide5Title'), desc: t('home.slide5Desc'), link: '/about', btnText: t('home.slide6Cta') },
-  { video: '/VIDEO/10.mp4', poster: '/IMG/7.jpg', title: t('home.slide6Title'), desc: t('home.slide6Desc'), link: '/about', btnText: t('home.slide6Cta') },
+  { video: baseUrl + 'VIDEO/1.mp4', poster: baseUrl + 'IMG/2.jpg', title: t('home.slide1Title'), desc: t('home.slide1Desc'), link: '/products' },
+  { img: baseUrl + 'IMG/4.jpg', title: t('home.slide2Title'), desc: t('home.slide2Desc'), link: '/products' },
+  { img: baseUrl + 'IMG/5.jpg', title: t('home.slide3Title'), desc: t('home.slide3Desc'), link: '/products' },
+  { video: baseUrl + 'VIDEO/2.mp4', poster: baseUrl + 'IMG/3.jpg', title: t('home.slide4Title'), desc: t('home.slide4Desc'), link: '/about', btnText: t('home.slide6Cta') },
+  { video: baseUrl + 'VIDEO/3.mp4', poster: baseUrl + 'IMG/6.jpg', title: t('home.slide5Title'), desc: t('home.slide5Desc'), link: '/about', btnText: t('home.slide6Cta') },
+  { video: baseUrl + 'VIDEO/10.mp4', poster: baseUrl + 'IMG/7.jpg', title: t('home.slide6Title'), desc: t('home.slide6Desc'), link: '/about', btnText: t('home.slide6Cta') },
 ]
 
 function goTo(i) { current.value = i; resetTimer() }

@@ -18,7 +18,7 @@
       <div class="container">
         <div class="grid grid-3">
           <div v-for="p in imageProducts" :key="p.id" class="card-portfolio" :class="{ featured: p.featured }" @click="openProduct(p)" role="button" tabindex="0">
-            <div class="card-portfolio-img"><img :src="p.image" :alt="p.name" loading="lazy" /></div>
+            <div class="card-portfolio-img"><img :src="baseUrl + p.image" :alt="p.name" loading="lazy" /></div>
             <div class="card-portfolio-body">
               <h4>{{ locale === 'zh' || locale === 'vi' || locale === 'th' ? p.name : p.nameEn }}</h4>
               <div class="card-portfolio-tags">
@@ -36,7 +36,7 @@
         <div class="video-grid">
           <div v-for="(v, i) in videoProducts" :key="i" class="video-card" @click="openVideo(v.src)">
             <div class="video-card-thumb">
-              <img :src="`/VIDEO/thumbs/${i + 1}.jpg`" :alt="v.title" loading="lazy" />
+              <img :src="`${baseUrl}VIDEO/thumbs/${i + 1}.jpg`" :alt="v.title" loading="lazy" />
             </div>
             <div class="video-card-info"><h4>{{ v.title }}</h4><span class="tag tag-gold">{{ v.tag }}</span></div>
           </div>
@@ -60,6 +60,7 @@ import { useI18n } from 'vue-i18n'
 import { products } from '@/data/products.js'
 
 const { t, locale } = useI18n()
+const baseUrl = import.meta.env.BASE_URL
 const tab = ref('image')
 const openProductModal = inject('openProductModal')
 const openVideoModal = inject('openVideoModal')
@@ -68,13 +69,13 @@ const imageProducts = products
 
 const videoTitles = ['头雕制作过程','精细雕刻实录','上色工艺展示','细节精修实录','眼睛安装实录','成品展示视频','发丝植入实录','3D打印过程','表面打磨实录','底漆喷涂实录','质检包装实录','成品鉴赏视频','制作实录一','制作实录二']
 const videoTags = ['工艺展示','工艺展示','涂装工艺','工艺展示','细节工艺','作品展示','细节工艺','制作工艺','精修工艺','涂装工艺','品质管控','作品展示','工艺展示','工艺展示']
-const videoPosters = ['/IMG/1.png','/IMG/2.jpg','/IMG/3.jpg','/IMG/4.jpg','/IMG/5.jpg','/IMG/6.jpg','/IMG/2.jpg','/IMG/2.jpg','/IMG/3.jpg','/IMG/4.jpg','/IMG/5.jpg','/IMG/6.jpg','/IMG/3.jpg','/IMG/2.jpg']
+const videoPosters = [baseUrl + 'IMG/1.png',baseUrl + 'IMG/2.jpg',baseUrl + 'IMG/3.jpg',baseUrl + 'IMG/4.jpg',baseUrl + 'IMG/5.jpg',baseUrl + 'IMG/6.jpg',baseUrl + 'IMG/2.jpg',baseUrl + 'IMG/2.jpg',baseUrl + 'IMG/3.jpg',baseUrl + 'IMG/4.jpg',baseUrl + 'IMG/5.jpg',baseUrl + 'IMG/6.jpg',baseUrl + 'IMG/3.jpg',baseUrl + 'IMG/2.jpg']
 
 const videoProducts = Array.from({ length: 14 }, (_, i) => ({
   title: videoTitles[i] || `视频 ${i + 1}`,
   tag: videoTags[i] || '作品展示',
-  src: `/VIDEO/${i + 1}.mp4`,
-  poster: videoPosters[i] || '/IMG/2.jpg',
+  src: baseUrl + `VIDEO/${i + 1}.mp4`,
+  poster: videoPosters[i] || baseUrl + 'IMG/2.jpg',
 }))
 
 function openProduct(p) { if (openProductModal) openProductModal(p) }

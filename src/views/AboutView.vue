@@ -30,7 +30,7 @@
         <div class="section-header"><h2>{{ t('about.teamTitle') }}</h2><p>{{ t('about.teamSub') }}</p></div>
         <div class="grid grid-4">
           <div v-for="(m, i) in team" :key="i" class="card-team">
-            <div class="card-team-avatar"><img :src="`/IMG/${[3,5,6,7][i]}.jpg`" :alt="m.name" loading="lazy" /></div>
+            <div class="card-team-avatar"><img :src="`${baseUrl}IMG/${[3,5,6,7][i]}.jpg`" :alt="m.name" loading="lazy" /></div>
             <div class="card-team-body"><h4>{{ m.name }}</h4><div class="card-team-role">{{ m.role }}</div><p>{{ m.desc }}</p></div>
           </div>
         </div>
@@ -63,6 +63,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t, tm } = useI18n()
+const baseUrl = import.meta.env.BASE_URL
 const aboutStats = computed(() => tm('about.stats'))
 const processSteps = computed(() => tm('about.processSteps'))
 const processDescs = computed(() => tm('about.processDescs'))
