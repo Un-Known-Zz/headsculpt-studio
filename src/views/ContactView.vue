@@ -79,7 +79,7 @@
 import { ref, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import emailjs from '@emailjs/browser'
-const { t, tm, locale } = useI18n()
+const { t, locale } = useI18n()
 
 // ===== EmailJS 配置 =====
 const EMAILJS_CONFIG = {
@@ -88,9 +88,9 @@ const EMAILJS_CONFIG = {
   publicKey:  import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || 'Y8oMufDlomdiftP02',
 }
 
-const social = computed(() => tm('contact.social'))
-const timelineOpts = computed(() => tm('contact.form.timelineOpts'))
-const budgetOpts = computed(() => tm('contact.form.budgetOpts'))
+const social = computed(() => t('contact.social'))
+const timelineOpts = computed(() => t('contact.form.timelineOpts'))
+const budgetOpts = computed(() => t('contact.form.budgetOpts'))
 
 const form = reactive({ name: '', phone: '', demand: '', timeline: '', budget: '', message: '' })
 const errors = reactive({ name: '', phone: '', demand: '' })
