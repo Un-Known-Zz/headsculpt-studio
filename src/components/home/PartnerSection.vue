@@ -11,6 +11,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTm } from '@/composables/useTm.js'
 const { t } = useI18n()
-const partners = computed(() => t('home.partners'))
+const partners = useTm('home.partners')
 </script>

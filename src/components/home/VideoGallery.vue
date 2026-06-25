@@ -28,10 +28,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTm } from '@/composables/useTm.js'
 const { t } = useI18n()
 const baseUrl = import.meta.env.BASE_URL
 const showMore = ref(false)
-const videoCards = computed(() => t('home.videoCards'))
-const videoMore = computed(() => t('home.videoMore'))
+const videoCards = useTm('home.videoCards')
+const videoMore = useTm('home.videoMore')
 defineEmits(['openVideo'])
 </script>

@@ -62,11 +62,12 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTm } from '@/composables/useTm.js'
 const { t } = useI18n()
 const baseUrl = import.meta.env.BASE_URL
-const aboutStats = computed(() => t('about.stats'))
-const processSteps = computed(() => t('about.processSteps'))
-const processDescs = computed(() => t('about.processDescs'))
-const team = computed(() => t('about.team'))
-const equipment = computed(() => t('about.equipment'))
+const aboutStats = useTm('about.stats')
+const processSteps = useTm('about.processSteps')
+const processDescs = useTm('about.processDescs')
+const team = useTm('about.team')
+const equipment = useTm('about.equipment')
 </script>

@@ -32,6 +32,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTm } from '@/composables/useTm.js'
 import { inject } from 'vue'
 import HeroCarousel from '@/components/home/HeroCarousel.vue'
 import FeaturedWorks from '@/components/home/FeaturedWorks.vue'
@@ -40,8 +41,8 @@ import VideoGallery from '@/components/home/VideoGallery.vue'
 import PartnerSection from '@/components/home/PartnerSection.vue'
 
 const { t } = useI18n()
-const stats = computed(() => t('home.stats'))
-const statsLabel = computed(() => t('home.statsLabel'))
+const stats = useTm('home.stats')
+const statsLabel = useTm('home.statsLabel')
 
 const openProductModal = inject('openProductModal')
 const openVideoModal = inject('openVideoModal')
