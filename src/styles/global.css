@@ -1,0 +1,229 @@
+/* ============================================================
+   头雕定制工作室 - 全局样式
+   重置、排版、滚动条、工具类、基础布局
+   ============================================================ */
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+  background-color: var(--bg-deep);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h1 { font: var(--text-h1); }
+h2 { font: var(--text-h2); }
+h3 { font: var(--text-h3); }
+h4 { font: var(--text-h4); }
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+a:hover {
+  color: var(--accent-gold-light);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+video {
+  max-width: 100%;
+  display: block;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Firefox */
+html {
+  scrollbar-width: none;
+}
+/* IE/Edge */
+body {
+  -ms-overflow-style: none;
+}
+
+/* ---------- Selection ---------- */
+::selection {
+  background: rgba(212, 168, 67, 0.3);
+  color: var(--text-primary);
+}
+
+/* ---------- Focus ---------- */
+:focus-visible {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+}
+
+/* ---------- Container ---------- */
+.container {
+  width: 100%;
+  max-width: var(--grid-max-width);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin);
+}
+
+.container-content {
+  width: 100%;
+  max-width: var(--grid-content-width);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin);
+}
+
+/* ---------- Section ---------- */
+.section {
+  padding: var(--space-24) 0;
+  position: relative;
+}
+
+.section-sm {
+  padding: var(--space-16) 0;
+}
+
+.section-lg {
+  padding: var(--space-32) 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: var(--space-16);
+}
+
+.section-header h2 {
+  margin-bottom: var(--space-4);
+  position: relative;
+  display: inline-block;
+}
+
+.section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+}
+
+.section-header p {
+  font: var(--text-body-lg);
+  color: var(--text-secondary);
+  max-width: 640px;
+  margin: var(--space-4) auto 0;
+}
+
+/* ---------- Utility Classes ---------- */
+.text-accent { color: var(--text-accent); }
+.text-cyan { color: var(--neon-cyan); }
+.text-muted { color: var(--text-muted); }
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+.mt-lg { margin-top: var(--space-12); }
+.mb-lg { margin-bottom: var(--space-12); }
+
+.hidden { display: none !important; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Grid ---------- */
+.grid {
+  display: grid;
+  gap: var(--grid-gutter);
+}
+
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ---------- Backdrop filter support ---------- */
+@supports (backdrop-filter: blur(1px)) {
+  .blur-support {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .blur-support {
+    background: rgba(10, 10, 12, 0.95);
+  }
+}

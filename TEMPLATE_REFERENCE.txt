@@ -1,0 +1,65 @@
+EmailJS 邮件模板 — 老李头头雕工作室
+====================================
+
+在 EmailJS 后台：Email Templates → 你的模板 → 编辑，清空全部内容，粘贴以下代码。
+
+⚠️ 重要：变量名必须和下方完全一致，一个字都不能改！
+
+
+───── 邮件主题（Subject）─────
+
+【老李头头雕】新定制意向 — {{from_name}}
+
+
+───── 邮件正文（Content）─────
+
+复制以下 HTML：
+
+<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0A0A0C;color:#E0E0E0;border-radius:8px;overflow:hidden">
+
+  <!-- 头部 -->
+  <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:24px 32px;border-bottom:2px solid #D4A843">
+    <div style="font-size:20px;font-weight:700;color:#D4A843">老李头头雕工作室</div>
+    <div style="font-size:13px;color:#666;margin-top:4px">新的定制意向通知</div>
+  </div>
+
+  <!-- 内容表 -->
+  <div style="padding:24px 32px">
+    <table style="width:100%;border-collapse:collapse">
+      <tr>
+        <td style="padding:10px 0;color:#888;width:100px;vertical-align:top">姓名</td>
+        <td style="padding:10px 0;color:#D4A843;font-weight:600">{{from_name}}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#888">电话</td>
+        <td style="padding:10px 0;color:#fff">{{phone}}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#888">定制需求</td>
+        <td style="padding:10px 0;color:#fff;line-height:1.6">{{demand}}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#888">预期工期</td>
+        <td style="padding:10px 0;color:#fff">{{timeline}}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#888">预算范围</td>
+        <td style="padding:10px 0;color:#fff">{{budget}}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#888">补充留言</td>
+        <td style="padding:10px 0;color:#fff;line-height:1.6">{{message}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 分割线 -->
+  <div style="margin:0 32px;border-top:1px solid #222"></div>
+
+  <!-- 底部信息 -->
+  <div style="padding:16px 32px 24px;font-size:12px;color:#555">
+    <div>提交语言: {{lang}} ｜ 提交时间: {{time}}</div>
+    <div style="margin-top:8px">此邮件由老李头头雕工作室官网自动发送</div>
+  </div>
+
+</div>

@@ -1,0 +1,215 @@
+/* ============================================================
+   头雕定制工作室 - 响应式样式
+   断点: xs<640, sm≥640, md≥768, lg≥1024, xl≥1280, 2xl≥1536
+   ============================================================ */
+
+/* ==========================================
+   2xl ≥ 1536px
+   ========================================== */
+@media (min-width: 1536px) {
+  :root {
+    --grid-margin: 120px;
+    --grid-max-width: 1400px;
+  }
+}
+
+/* ==========================================
+   xl ≥ 1280px (默认样式，无需覆盖)
+   ========================================== */
+
+/* ==========================================
+   lg: 1024px - 1279px (平板横屏 / 小桌面)
+   ========================================== */
+@media (max-width: 1279px) {
+  :root {
+    --grid-margin: 48px;
+    --text-display-xl: 700 56px/1.05 var(--font-display);
+  }
+
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
+  .footer-grid > *:last-child { grid-column: span 2; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .contact-info-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .modal-product-body {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-product-img {
+    max-height: 300px;
+  }
+}
+
+/* ==========================================
+   md: 768px - 1023px (平板竖屏)
+   ========================================== */
+@media (max-width: 1023px) {
+  :root {
+    --grid-margin: 32px;
+    --grid-gutter: 16px;
+    --text-display-xl: 700 48px/1.05 var(--font-display);
+    --text-display-lg: 700 40px/1.1 var(--font-display);
+    --text-h1: 600 32px/1.2 var(--font-sans);
+    --text-h2: 600 28px/1.25 var(--font-sans);
+  }
+
+  .section { padding: var(--space-16) 0; }
+  .section-lg { padding: var(--space-20) 0; }
+
+  .grid-2,
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+
+  .nav-links { display: none; }
+  .menu-toggle { display: flex; }
+  .mobile-menu { display: none; }
+  .mobile-menu.open { display: flex; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .contact-info-grid { grid-template-columns: repeat(2, 1fr); }
+  .partner-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .footer-grid > *:first-child {
+    grid-column: span 2;
+  }
+
+  .carousel-slide-content {
+    left: var(--space-8);
+    right: var(--space-8);
+    max-width: none;
+    bottom: 20%;
+  }
+  .carousel-slide-content h1 {
+    font-size: 40px;
+  }
+  .carousel-arrow { display: none; }
+
+  .modal-product-body { grid-template-columns: 1fr; }
+  .modal-product-img { max-height: 300px; }
+
+  .hero-video-content h1 { font-size: 48px; }
+
+  .form-container { padding: var(--space-6); }
+}
+
+/* ==========================================
+   sm: 640px - 767px (手机横屏 / 小平板)
+   ========================================== */
+@media (max-width: 767px) {
+  :root {
+    --grid-margin: 24px;
+    --navbar-height: 60px;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 { grid-template-columns: 1fr; }
+
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-grid > *:first-child { grid-column: span 1; }
+  .footer-bottom { flex-direction: column; gap: var(--space-3); text-align: center; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .contact-info-grid { grid-template-columns: 1fr; }
+  .partner-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .stat-number { font-size: 36px; }
+
+  .carousel {
+    min-height: 500px;
+  }
+  .carousel-slide-content h1 { font-size: 32px; }
+  .carousel-slide-content p { font-size: 14px; }
+
+  .hero-video {
+    min-height: 500px;
+  }
+  .hero-video-content h1 { font-size: 36px; }
+  .hero-video-content p { font-size: 14px; }
+
+  .modal {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+  .modal-product-body { grid-template-columns: 1fr; }
+
+  .form-container { padding: var(--space-5); }
+}
+
+/* ==========================================
+   xs: < 640px (手机竖屏)
+   ========================================== */
+@media (max-width: 639px) {
+  :root {
+    --grid-margin: 16px;
+    --grid-gutter: 12px;
+    --text-display-xl: 700 36px/1.1 var(--font-display);
+    --text-h1: 600 28px/1.2 var(--font-sans);
+    --text-h2: 600 24px/1.25 var(--font-sans);
+    --text-h3: 600 20px/1.3 var(--font-sans);
+  }
+
+  .section { padding: var(--space-12) 0; }
+  .section-lg { padding: var(--space-16) 0; }
+  .section-header { margin-bottom: var(--space-10); }
+
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-number { font-size: 28px; }
+  .stat-item { padding: var(--space-5); }
+
+  .partner-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .nav-logo-text { font-size: 16px; }
+  .nav-logo-icon { width: 32px; height: 32px; font-size: 14px; }
+
+  .carousel {
+    height: 85vh;
+    min-height: 400px;
+  }
+  .carousel-slide-content h1 { font-size: 28px; }
+  .carousel-slide-content p { font-size: 13px; }
+  .carousel-slide-content { bottom: 25%; }
+
+  .hero-video {
+    height: 85vh;
+    min-height: 400px;
+  }
+  .hero-video-content h1 { font-size: 28px; }
+
+  .filter-bar { gap: var(--space-2); }
+  .filter-btn { padding: 6px 14px; font-size: 12px; }
+
+  .btn-lg { padding: 14px 28px; font-size: 16px; }
+
+  .card-process { padding: var(--space-5); }
+  .card-process-step { font-size: 56px; }
+
+  .timeline { padding-left: 30px; }
+  .timeline-item { padding-left: var(--space-5); }
+  .timeline-item::before { left: -24px; width: 10px; height: 10px; }
+
+  .modal-product-info { padding: var(--space-5); }
+
+  .breadcrumb { padding-top: calc(var(--navbar-height) + var(--space-6)); }
+
+  .lang-switcher { display: none; }
+  .mobile-menu .lang-switcher { display: flex; margin-top: var(--space-6); }
+}
+
+/* ==========================================
+   Touch device adjustments
+   ========================================== */
+@media (hover: none) and (pointer: coarse) {
+  .card-portfolio:hover,
+  .card-process:hover,
+  .card-team:hover {
+    transform: none;
+  }
+
+  .card-portfolio:hover .card-portfolio-img img {
+    transform: none;
+  }
+}
