@@ -76,10 +76,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import emailjs from '@emailjs/browser'
 import { useTm } from '@/composables/useTm.js'
+
 const { t, locale } = useI18n()
 
 // ===== EmailJS 配置 =====
@@ -114,17 +114,20 @@ function clearError(f) { if (errors[f] && form[f]?.trim()) errors[f] = '' }
 async function onSubmit() {
   validate('name'); validate('phone'); validate('demand')
   if (errors.name || errors.phone || errors.demand) return
-  
+
   submitting.value = true
   submitError.value = ''
 
   try {
+    // 动态导入 EmailJS，加载失败不影响页面渲染
+    const emailjs = (await import('@emailjs/browser')).default
+
     const result = await emailjs.send(
       EMAILJS_CONFIG.serviceId,
       EMAILJS_CONFIG.templateId,
       {
         from_name:  form.name,
-        reply_to:   form.phone,          // EmailJS 用 reply_to 做回复标识
+        reply_to:   form.phone,
         phone:      form.phone,
         demand:     form.demand,
         timeline:   form.timeline || t('contact.form.timelineOpts')[0],
