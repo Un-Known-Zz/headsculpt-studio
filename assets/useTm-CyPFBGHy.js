@@ -1,0 +1,1 @@
+import{u as a,j as o,h as l}from"./index-BjkO85uk.js";function f(s){const{messages:e,locale:t}=a();return o(()=>{const u=s.split(".");let r=e.value[l(t)];for(const n of u){if(r==null)return[];r=r[n]}return Array.isArray(r)?r:r!=null?[r]:[]})}export{f as u};
