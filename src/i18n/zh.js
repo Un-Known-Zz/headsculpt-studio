@@ -96,7 +96,7 @@ export default {
       phone: '联系电话', phonePh: '请输入您的手机号码',
       demand: '定制需求', demandPh: '请描述您想要的定制内容',
       timeline: '预期工期', budget: '预期预算',
-      timelineOpts: ['请选择预期工期','2周以内','2-4周','1-2个月','不着急，看情况'],
+      timelineOpts: ['请选择预期工期','3-4周','1-2个月','2-3月','看情况'],
       budgetOpts: ['请选择预期预算', '3000元以下', '3000-8000元', '8000-20000元', '20000元以上'],
       message: '补充留言', messagePh: '如有其他需求或疑问，请在此留言',
       messageCount: '字', submit: '提交意向', submitting: '提交中...',
