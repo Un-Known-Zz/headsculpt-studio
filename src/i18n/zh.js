@@ -85,7 +85,7 @@ export default {
   },
   products: {
     title: '作品展示', sub: '每一件作品，都是心血的凝聚',
-    empty: '暂无该类别作品，敬请期待', videoTab: '图片展示', imageTab: '图片展示',
+    empty: '暂无该类别作品，敬请期待', videoTab: '视频展示', imageTab: '图片展示',
   },
   contact: {
     title: '联系我们', sub: '留下您的想法，我们为您实现',

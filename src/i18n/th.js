@@ -44,7 +44,7 @@ export default {
   products: { title: 'ผลงาน', sub: 'ทุกชิ้นคือผลลัพธ์ของความรัก', empty: 'ยังไม่มีผลงาน', videoTab: 'วิดีโอ', imageTab: 'รูปภาพ' },
   contact: {
     title: 'ติดต่อเรา', sub: 'แบ่งปันวิสัยทัศน์',
-    info: { address: 'ที่อยู่', addressVal: 'เซินเจิ้น จีน', phone: 'โทร', phoneVal: '+86 138-0000-0000', email: 'อีเมล', emailVal: 'hello@headsculpt.studio' },
+    info: { address: 'ที่อยู่', addressVal: 'เซินเจิ้น จีน', phone: 'โทร', phoneVal: '+86 180-3308-0824', email: 'อีเมล', emailVal: '2960772239@qq.com' },
     form: {
       title: 'สอบถาม', sub: 'กรอกแบบฟอร์ม ติดต่อใน 24 ชม.',
       name: 'ชื่อ', namePh: 'กรอกชื่อ', phone: 'เบอร์', phonePh: 'กรอกเบอร์',

@@ -13,7 +13,7 @@
       </nav>
       <div class="nav-actions">
         <LanguageSwitcher />
-        <router-link to="/contact" class="btn btn-primary btn-sm">{{ t('nav.cta') }}</router-link>
+        <router-link to="/contact" class="btn btn-primary btn-nav-cta">{{ t('nav.cta') }}</router-link>
       </div>
       <button class="menu-toggle" :class="{ active: mobileOpen }" @click="toggleMobile" aria-label="菜单">
         <span></span><span></span><span></span>

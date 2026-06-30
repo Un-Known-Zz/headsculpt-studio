@@ -77,7 +77,7 @@ export default {
   },
   contact: {
     title: 'Contact Us', sub: 'Share your vision, we bring it to life',
-    info: { address: 'Studio Address', addressVal: 'XX Tech Park Rd, Shenzhen, China', phone: 'Phone', phoneVal: '+86 138-0000-0000', email: 'Email', emailVal: 'hello@headsculpt.studio' },
+    info: { address: 'Studio Address', addressVal: 'Shenzhen, China', phone: 'Phone', phoneVal: '+86 180-3308-0824', email: 'Email', emailVal: '2960772239@qq.com' },
     form: {
       title: 'Custom Order Inquiry', sub: 'Fill out the form and we will contact you within 24 hours',
       name: 'Your Name', namePh: 'Enter your name',

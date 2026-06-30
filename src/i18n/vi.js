@@ -44,7 +44,7 @@ export default {
   products: { title: 'Sản phẩm', sub: 'Mỗi tác phẩm là tâm huyết', empty: 'Chưa có tác phẩm nào.', videoTab: 'Video', imageTab: 'Hình ảnh' },
   contact: {
     title: 'Liên hệ', sub: 'Chia sẻ ý tưởng',
-    info: { address: 'Địa chỉ', addressVal: 'Thâm Quyến, Trung Quốc', phone: 'ĐT', phoneVal: '+86 138-0000-0000', email: 'Email', emailVal: 'hello@headsculpt.studio' },
+    info: { address: 'Địa chỉ', addressVal: 'Thâm Quyến, Trung Quốc', phone: 'ĐT', phoneVal: '+86 180-3308-0824', email: 'Email', emailVal: '2960772239@qq.com' },
     form: {
       title: 'Yêu cầu tùy chỉnh', sub: 'Điền form, liên hệ trong 24h',
       name: 'Tên', namePh: 'Nhập tên', phone: 'SĐT', phonePh: 'Nhập SĐT',

@@ -258,12 +258,13 @@
 
 /* Nav CTA - 更大更突出的预约定制按钮 */
 .btn-nav-cta {
-  padding: 10px 24px !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.5px;
+  padding: 12px 30px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px;
   border-radius: 8px !important;
   animation: navCtaPulse 2.5s ease-in-out infinite;
+  text-transform: uppercase;
 }
 @keyframes navCtaPulse {
   0%, 100% { box-shadow: var(--shadow-metallic); }
