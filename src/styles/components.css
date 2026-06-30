@@ -1226,6 +1226,23 @@
   text-decoration: underline;
 }
 
+/* 微信二维码弹窗专属样式 */
+.wechat-qr-modal {
+  max-width: 340px;
+  padding: var(--space-8);
+  text-align: center;
+}
+.wechat-qr-modal img {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+}
+.wechat-qr-modal p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
 .footer-bottom {
   border-top: var(--border-thin);
   padding-top: var(--space-6);
