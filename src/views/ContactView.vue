@@ -7,7 +7,6 @@
     <section class="section-sm" style="padding-top:0">
       <div class="container">
         <div class="contact-info-grid">
-          <div class="contact-info-card"><div class="contact-info-icon">📍</div><h4>{{ t('contact.info.address') }}</h4><p>{{ t('contact.info.addressVal') }}</p></div>
           <div class="contact-info-card"><div class="contact-info-icon">📞</div><h4>{{ t('contact.info.phone') }}</h4><p>{{ t('contact.info.phoneVal') }}</p></div>
           <div class="contact-info-card"><div class="contact-info-icon">✉️</div><h4>{{ t('contact.info.email') }}</h4><p>{{ t('contact.info.emailVal') }}</p></div>
         </div>

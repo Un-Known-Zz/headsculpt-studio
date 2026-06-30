@@ -25,7 +25,7 @@
     <router-link to="/about" class="nav-link" @click="closeMobile">{{ t('nav.about') }}</router-link>
     <router-link to="/products" class="nav-link" @click="closeMobile">{{ t('nav.products') }}</router-link>
     <router-link to="/contact" class="nav-link" @click="closeMobile">{{ t('nav.contact') }}</router-link>
-    <router-link to="/contact" class="btn btn-primary btn-block" style="margin-top:16px" @click="closeMobile">{{ t('nav.cta') }}</router-link>
+    <router-link to="/contact" class="btn btn-primary btn-block btn-lg" style="margin-top:16px" @click="closeMobile">{{ t('nav.cta') }}</router-link>
     <div style="margin-top:16px"><LanguageSwitcher /></div>
   </div>
 </template>

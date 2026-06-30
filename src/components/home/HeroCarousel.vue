@@ -22,8 +22,12 @@
     <div class="carousel-dots">
       <button v-for="(s, i) in slides" :key="i" class="carousel-dot" :class="{ active: current === i }" @click="goTo(i)"></button>
     </div>
-    <button class="carousel-arrow carousel-arrow-prev" @click="prev">‹</button>
-    <button class="carousel-arrow carousel-arrow-next" @click="next">›</button>
+    <button class="carousel-arrow carousel-arrow-prev" @click="prev" aria-label="上一张">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="carousel-arrow carousel-arrow-next" @click="next" aria-label="下一张">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+    </button>
     <!-- <div class="scroll-indicator">
       <span class="scroll-indicator-arrow bounce-down">↓</span>
     </div> -->
