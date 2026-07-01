@@ -19,13 +19,13 @@
         </div> -->
         <div class="footer-col">
           <h4>{{ t('footer.contact') }}</h4>
-          <a href="mailto:2960772239@qq.com">2960772239@qq.com</a>
-          <a href="tel:+8618033080824">+86 180-3308-0824</a>
+          <span>2960772239@qq.com</span>
+          <span>+86 180-3308-0824</span>
           <a href="#" @click.prevent="showWechatQr = true" class="wechat-link">WeChat：18033080824</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>{{ t('footer.copyright') }} 1.16</span>
+        <span>{{ t('footer.copyright') }} 1.17</span>
       </div>
     </div>
     <!-- 微信二维码弹窗 -->
