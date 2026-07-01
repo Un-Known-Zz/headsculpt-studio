@@ -40,8 +40,8 @@ async function submitTask(prompt, opts = {}) {
     headers,
     body: JSON.stringify({
       model,
-      prompt: `头雕定制设计：${prompt}。风格：写实雕塑，精细工艺，收藏级品质，3D渲染，工作室灯光，超高清细节。`,
-      negative_prompt: 'lowres, bad anatomy, bad hands, text, error, watermark, blurry, low quality',
+      prompt: `Professional head sculpture bust, portrait figurine of: ${prompt}. Studio lighting, high detail 3D render, realistic sculpture texture, collectible quality figure photography, solid color background, front view of head and shoulders only.`,
+      negative_prompt: 'scene, landscape, environment, background, full body, lowres, bad anatomy, bad hands, text, error, watermark, blurry, low quality, multiple people, crowd, building, street',
       size: opts.size || '1024x1024',
       steps: opts.steps || 30,
       guidance: opts.guidance || 3.5,

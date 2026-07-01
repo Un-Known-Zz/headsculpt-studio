@@ -26,20 +26,29 @@
           </div>
 
           <!-- 消息列表 -->
-          <div v-for="(msg, i) in messages" :key="i" class="ai-message" :class="msg.role">
-            <div v-if="msg.role === 'assistant' && msg.images?.length" class="ai-images-grid">
-              <div v-for="(img, idx) in msg.images" :key="idx" class="ai-image-card">
-                <img :src="img.url" :alt="msg.content" @load="scrollToBottom" />
-                <a :href="img.url" target="_blank" class="ai-image-download" title="下载图片">⬇</a>
+          <div v-for="(msg, i) in messages" :key="i" :class="['ai-message', msg.role]">
+
+            <!-- 用户消息 -->
+            <template v-if="msg.role === 'user'">
+              <div class="ai-message-bubble user-bubble">{{ msg.content }}</div>
+            </template>
+
+            <!-- AI 回复 -->
+            <template v-if="msg.role === 'assistant'">
+              <!-- 生成图片 -->
+              <div v-if="msg.images?.length" class="ai-images-grid">
+                <div v-for="(img, idx) in msg.images" :key="idx" class="ai-image-card">
+                  <img :src="img.url" :alt="msg.content || 'AI生成头雕'" @load="scrollToBottom" />
+                  <a :href="img.url" target="_blank" class="ai-image-download" title="下载图片">⬇</a>
+                </div>
               </div>
-            </div>
-            <div v-if="msg.content" class="ai-message-bubble">
-              {{ msg.content }}
-            </div>
+              <!-- 文字回复 -->
+              <div v-if="msg.content" class="ai-message-bubble ai-bubble">{{ msg.content }}</div>
+            </template>
           </div>
 
           <!-- 加载动画 -->
-          <div v-if="loading" class="ai-message assistant">
+          <div v-if="loading" class="ai-message ai-msg-assistant">
             <div class="ai-loading">
               <span></span><span></span><span></span>
               <span style="margin-left:8px;color:var(--text-secondary);font-size:13px">AI 正在创作中...</span>
@@ -53,7 +62,7 @@
             <textarea
               v-model="inputText"
               :placeholder="t('ai.placeholder') || '描述您想要的头雕样式...'"
-              @keydown.enter.exact="send"
+              @keydown.enter.exact.prevent="send"
               rows="1"
               ref="inputRef"
             />
@@ -154,7 +163,7 @@ function close() {
 }
 
 .ai-modal {
-  width: 480px; max-width: 95vw; max-height: 85vh;
+  width: 520px; max-width: 94vw; max-height: 86vh;
   background: var(--bg-elevated);
   border: var(--border-thin);
   border-radius: 20px;
@@ -165,8 +174,9 @@ function close() {
 
 .ai-modal-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px;
+  padding: 18px 22px;
   border-bottom: var(--border-thin);
+  flex-shrink: 0;
 }
 .ai-modal-title {
   display: flex; align-items: center; gap: 10px;
@@ -182,70 +192,85 @@ function close() {
   background: var(--bg-surface); border: var(--border-thin);
   color: var(--text-secondary); font-size: 18px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.2s; flex-shrink: 0;
 }
 .ai-modal-close:hover { background: var(--accent-gold); color: #000; }
 
 /* 对话区域 */
 .ai-chat-body {
-  flex: 1; overflow-y: auto; padding: 20px;
-  min-height: 200px; max-height: 420px;
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  min-height: 200px; max-height: 450px;
+  display: flex; flex-direction: column; gap: 12px;
 }
 
 .ai-welcome {
-  text-align: center; padding: 20px 0;
+  text-align: center; padding: 24px 0 16px;
 }
 .ai-welcome-icon { font-size: 48px; margin-bottom: 12px; }
 .ai-welcome h4 { font-size: 16px; margin-bottom: 8px; color: var(--text-primary); }
-.ai-welcome p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+.ai-welcome p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
 
 .ai-examples {
   display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
 }
 .ai-example-btn {
-  padding: 6px 14px; border-radius: 20px; font-size: 12px;
+  padding: 7px 14px; border-radius: 20px; font-size: 12px;
   background: var(--bg-surface); border: var(--border-thin);
   color: var(--text-secondary); cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s; line-height: 1.4;
 }
 .ai-example-btn:hover {
   border-color: var(--accent-gold); color: var(--accent-gold);
 }
 
-/* 消息 */
-.ai-message { margin-bottom: 16px; }
-.ai-message.user { display: flex; justify-content: flex-end; }
-.ai-message.assistant { display: flex; justify-content: flex-start; }
-
-.ai-message-bubble {
-  max-width: 80%; padding: 10px 16px; border-radius: 16px; font-size: 14px;
-  line-height: 1.5;
+/* 消息行 */
+.ai-message {
+  display: flex;
+  width: 100%;
 }
-.ai-message.user .ai-message-bubble {
+.ai-message.user {
+  justify-content: flex-end;
+}
+.ai-msg-assistant {
+  justify-content: flex-start;
+}
+
+/* 气泡统一样式 */
+.ai-message-bubble {
+  max-width: 85%; padding: 10px 16px; border-radius: 16px; font-size: 14px;
+  line-height: 1.55; word-break: break-word; white-space: pre-wrap;
+}
+
+/* 用户气泡（右） */
+.user-bubble {
   background: var(--accent-gold); color: #000;
   border-bottom-right-radius: 4px;
 }
-.ai-message.assistant .ai-message-bubble {
+
+/* AI 气泡（左） */
+.ai-bubble {
   background: var(--bg-surface); color: var(--text-primary);
   border: var(--border-thin); border-bottom-left-radius: 4px;
 }
 
 /* 生成图片网格 */
 .ai-images-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  margin-top: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  max-width: 400px; width: 100%;
+  margin-top: 4px;
 }
 .ai-image-card {
-  position: relative; border-radius: 12px; overflow: hidden;
+  position: relative; border-radius: 14px; overflow: hidden;
   aspect-ratio: 1; background: var(--bg-surface);
+  border: var(--border-thin);
 }
 .ai-image-card img {
   width: 100%; height: 100%; object-fit: cover;
   transition: transform 0.3s;
 }
-.ai-image-card:hover img { transform: scale(1.05); }
+.ai-image-card:hover img { transform: scale(1.04); }
 .ai-image-download {
-  position: absolute; bottom: 6px; right: 6px;
+  position: absolute; bottom: 8px; right: 8px;
   width: 28px; height: 28px; border-radius: 50%;
   background: rgba(0,0,0,0.7); color: #fff;
   display: flex; align-items: center; justify-content: center;
@@ -256,10 +281,12 @@ function close() {
 
 /* 加载动画 */
 .ai-loading {
-  display: flex; align-items: center; gap: 4px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 5px; padding: 12px 16px;
+  background: var(--bg-surface); border: var(--border-thin);
+  border-radius: 16px; border-bottom-left-radius: 4px;
 }
-.ai-loading span:not(.ai-loading span:last-child) {
-  width: 6px; height: 6px; border-radius: 50%;
+.ai-loading span:not(:last-child) {
+  width: 7px; height: 7px; border-radius: 50%;
   background: var(--accent-gold);
   animation: aiBounce 1.2s infinite;
 }
@@ -272,8 +299,9 @@ function close() {
 
 /* 输入区域 */
 .ai-chat-input {
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-top: var(--border-thin);
+  flex-shrink: 0;
 }
 .ai-input-wrap {
   display: flex; gap: 8px; align-items: flex-end;
@@ -284,21 +312,21 @@ function close() {
   color: var(--text-primary); font-size: 14px;
   resize: none; outline: none;
   font-family: inherit;
-  min-height: 40px; max-height: 100px;
-  transition: border-color 0.2s;
+  min-height: 42px; max-height: 100px;
+  transition: border-color 0.2s; line-height: 1.45;
 }
 .ai-input-wrap textarea:focus {
   border-color: var(--accent-gold);
 }
 .ai-send-btn {
-  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
   background: var(--accent-gold); border: none;
-  color: #000; font-size: 14px;
+  color: #000; font-size: 15px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all 0.2s;
 }
 .ai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ai-send-btn:not(:disabled):hover { transform: scale(1.05); }
+.ai-send-btn:not(:disabled):hover { transform: scale(1.06); }
 
 .ai-spinner {
   display: inline-block; animation: spin 1s linear infinite;
