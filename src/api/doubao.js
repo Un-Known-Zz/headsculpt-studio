@@ -3,17 +3,16 @@
  *
  * 认证：Header Authorization: Bearer {TOKEN}
  * 端点：
- *   - 提交任务: https://api-inference.modelscope.cn/v1/images/generations (POST)
- *   - 查询结果: https://api-inference.modelscope.cn/v1/tasks/{taskId} (GET)
+ *   - 提交任务: POST /v1/images/generations（需 X-ModelScope-Async-Mode: true）
+ *   - 查询结果: GET /v1/tasks/{taskId}（需 X-ModelScope-Task-Type: image_generation）
  *
- * 关键 Header:
- *   - X-ModelScope-Async-Mode: true （必须，开启异步模式）
- *   - X-ModelScope-Task-Type: image_generation （查询时必须）
- *
- * 支持模型: black-forest-labs/FLUX.1-Krea-dev, MAILAND/majicflus_v1 等
+ * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
+ * 生产环境：直连 api-inference.modelscope.cn
  */
 
-const BASE_URL = 'https://api-inference.modelscope.cn/v1'
+// 本地开发走 Vite 代理，生产环境直连 API
+const IS_DEV = import.meta.env.DEV
+const BASE_URL = IS_DEV ? '/api/modelscope/v1' : 'https://api-inference.modelscope.cn/v1'
 const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 
 // 默认使用 FLUX.1-Krea-dev（高质量文生图模型）
@@ -25,20 +24,25 @@ const DEFAULT_MODEL = 'black-forest-labs/FLUX.1-Krea-dev'
  */
 async function submitTask(prompt, opts = {}) {
   const model = opts.model || DEFAULT_MODEL
-  const size = opts.size || '1024x1024'
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-ModelScope-Async-Mode': 'true',
+  }
+
+  // 生产环境下需要带 Token（本地开发由 Vite 代理注入）
+  if (!IS_DEV && TOKEN) {
+    headers['Authorization'] = `Bearer ${TOKEN}`
+  }
 
   const response = await fetch(`${BASE_URL}/images/generations`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${TOKEN}`,
-      'X-ModelScope-Async-Mode': 'true',
-    },
+    headers,
     body: JSON.stringify({
       model,
       prompt: `头雕定制设计：${prompt}。风格：写实雕塑，精细工艺，收藏级品质，3D渲染，工作室灯光，超高清细节。`,
       negative_prompt: 'lowres, bad anatomy, bad hands, text, error, watermark, blurry, low quality',
-      size,
+      size: opts.size || '1024x1024',
       steps: opts.steps || 30,
       guidance: opts.guidance || 3.5,
       seed: opts.seed || undefined,
@@ -52,7 +56,7 @@ async function submitTask(prompt, opts = {}) {
     let errMsg = `提交任务失败 (${response.status})`
     try {
       const err = JSON.parse(text)
-      errMsg = err.error?.message || err.message || errMsg
+      errMsg = err.error?.message || err.errors?.message || err.message || errMsg
     } catch {}
     throw new Error(errMsg)
   }
@@ -87,12 +91,13 @@ async function pollTask(taskId, options = {}) {
   const startTime = Date.now()
 
   while (Date.now() - startTime < timeout) {
-    const response = await fetch(`${BASE_URL}/tasks/${taskId}`, {
-      headers: {
-        'Authorization': `Bearer ${TOKEN}`,
-        'X-ModelScope-Task-Type': 'image_generation',
-      },
-    })
+    const headers = {}
+    if (!IS_DEV && TOKEN) {
+      headers['Authorization'] = `Bearer ${TOKEN}`
+    }
+    headers['X-ModelScope-Task-Type'] = 'image_generation'
+
+    const response = await fetch(`${BASE_URL}/tasks/${taskId}`, { headers })
 
     const text = await response.text()
 
@@ -143,7 +148,7 @@ async function pollTask(taskId, options = {}) {
  * @returns {Array<{url: string}>} 图片列表
  */
 export async function generateHeadSculpt(prompt, opts = {}) {
-  if (!TOKEN) {
+  if (!TOKEN && !IS_DEV) {
     throw new Error('AI 服务未配置，请联系管理员')
   }
 
