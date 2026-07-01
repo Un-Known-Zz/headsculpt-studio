@@ -5,7 +5,7 @@
         <div class="modal-product-body">
           <div class="modal-product-img" @click="zoomImage">
             <img :src="product.image" :alt="product.name" ref="modalImgRef" style="cursor:zoom-in" />
-            <div class="zoom-hint" v-if="!zoomed">{{ t('modal.clickToZoom') || '点击放大' }}</div>
+            <!-- <div class="zoom-hint" v-if="!zoomed">{{ t('modal.clickToZoom') || '点击放大' }}</div> -->
           </div>
           <div class="modal-product-info">
             <button class="modal-close" @click="close">&times;</button>
