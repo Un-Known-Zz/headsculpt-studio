@@ -1,41 +1,35 @@
 /**
- * 豆包 AI 文生图 API 封装（直连模式）
+ * 豆包 AI 文生图 API 封装（通过 Cloudflare Worker 代理）
  *
  * 模型：doubao-seedream-5-0-260128（豆包最新图像创作模型）
- * 文档：https://api-doc.vncps.com/api-reference/image-generation
  *
- * ⚠️ 安全提示：
- * - API Key 通过 VITE_ 前缀注入构建产物
- * - 豆包 API 有速率限制，即使 Key 泄露风险可控
- * - 如需更高安全性可改用 Cloudflare Worker 代理方案
+ * ⚠️ 为什么需要代理？
+ * 浏览器有 CORS 安全策略，GitHub Pages 域名无法直接请求豆包 API
+ * 通过 Cloudflare Worker 中转，绕过 CORS 限制，同时隐藏 API Key
+ *
+ * Worker 代码：/cloudflare-worker/worker.js
  */
 
-const API_URL = 'https://ark.cn-beijing.volces.com/v1/images/generations'
-const API_KEY = import.meta.env.VITE_DOUBAO_API_KEY
+const WORKER_URL = import.meta.env.VITE_API_WORKER_URL
 
 export async function generateHeadSculpt(prompt, opts = {}) {
-  if (!API_KEY) {
-    throw new Error('未配置 API Key，请在 .env 文件中设置 VITE_DOUBAO_API_KEY')
+  if (!WORKER_URL) {
+    throw new Error('AI 服务未配置，请联系管理员')
   }
 
-  const response = await fetch(API_URL, {
+  const response = await fetch(WORKER_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      prompt,
       model: opts.model || 'doubao-seedream-5-0-260128',
-      prompt: `头雕定制设计：${prompt}。风格：写实雕塑，精细工艺，收藏级品质。`,
       size: opts.size || '2K',
-      response_format: 'url',
-      watermark: false,
     }),
   })
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}))
-    throw new Error(err.error?.message || `豆包 API 错误 (${response.status})`)
+    throw new Error(err.error || `服务暂时不可用 (${response.status})`)
   }
 
   const data = await response.json()

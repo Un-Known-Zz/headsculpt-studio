@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_DOUBAO_API_KEY: ${{ secrets.VITE_DOUBAO_API_KEY }}
+          VITE_API_WORKER_URL: ${{ secrets.VITE_API_WORKER_URL }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
