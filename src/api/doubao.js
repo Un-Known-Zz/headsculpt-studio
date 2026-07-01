@@ -166,20 +166,35 @@ async function submitTask(prompt, opts = {}) {
     headers['Authorization'] = `Bearer ${TOKEN}`
   }
 
-  const response = await fetch(`${BASE_URL}/images/generations`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      model,
-      prompt: buildPrompt(prompt),
-      negative_prompt: buildNegativePrompt(),
-      size: opts.size || '1024x1024',
-      steps: opts.steps || 25,
-      guidance: opts.guidance || 4.0,
-      seed: opts.seed || undefined,
-      n: opts.n || 1,
-    }),
-  })
+  const fullUrl = `${BASE_URL}/images/generations`
+
+  let response
+  try {
+    response = await fetch(fullUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model,
+        prompt: buildPrompt(prompt),
+        negative_prompt: buildNegativePrompt(),
+        size: opts.size || '1024x1024',
+        steps: opts.steps || 25,
+        guidance: opts.guidance || 4.0,
+        seed: opts.seed || undefined,
+        n: opts.n || 1,
+      }),
+    })
+  } catch (fetchErr) {
+    // 区分不同类型的网络错误，给出明确提示
+    if (fetchErr.name === 'TypeError' && fetchErr.message.includes('fetch')) {
+      if (IS_DEV) {
+        throw new Error('网络连接失败：请确保已运行 npm run dev 启动开发服务器。当前处于开发模式，需要 Vite 代理转发请求。')
+      } else {
+        throw new Error('网络连接失败：API 服务不可达或被浏览器安全策略拦截。可能是内容审核拦截或网络问题，请稍后重试。')
+      }
+    }
+    throw new Error(`网络请求异常：${fetchErr.message}`)
+  }
 
   const text = await response.text()
 
@@ -228,7 +243,15 @@ async function pollTask(taskId, options = {}) {
     }
     headers['X-ModelScope-Task-Type'] = 'image_generation'
 
-    const response = await fetch(`${BASE_URL}/tasks/${taskId}`, { headers })
+    let response
+    try {
+      response = await fetch(`${BASE_URL}/tasks/${taskId}`, { headers })
+    } catch (fetchErr) {
+      if (fetchErr.name === 'TypeError' && fetchErr.message.includes('fetch')) {
+        throw new Error(`轮询任务时网络断开（可能请求超时或被拦截）：${fetchErr.message}`)
+      }
+      throw new Error(`轮询异常：${fetchErr.message}`)
+    }
 
     const text = await response.text()
 
