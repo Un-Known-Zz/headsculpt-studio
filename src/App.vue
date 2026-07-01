@@ -1,7 +1,7 @@
 <template>
   <div id="app-root">
     <PageLoader />
-    <AppNavbar />
+    <AppNavbar @openAI="showAI = true" />
     <router-view v-slot="{ Component }">
       <transition name="page" mode="out-in">
         <component :is="Component" />
@@ -10,6 +10,7 @@
     <AppFooter />
     <ProductModal ref="productModalRef" />
     <VideoExpandModal ref="videoModalRef" />
+    <AIHeadSculptDialog :visible="showAI" @close="showAI = false" />
   </div>
 </template>
 
@@ -20,9 +21,11 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import PageLoader from '@/components/layout/PageLoader.vue'
 import ProductModal from '@/components/products/ProductModal.vue'
 import VideoExpandModal from '@/components/shared/VideoExpandModal.vue'
+import AIHeadSculptDialog from '@/components/layout/AIHeadSculptDialog.vue'
 
 const productModalRef = ref(null)
 const videoModalRef = ref(null)
+const showAI = ref(false)
 
 provide('openProductModal', (p) => productModalRef.value?.open(p))
 provide('openVideoModal', (src) => videoModalRef.value?.open(src))

@@ -271,6 +271,32 @@
   50% { box-shadow: 0 4px 20px rgba(212,168,67,0.45), 0 0 40px rgba(212,168,67,0.15); }
 }
 
+/* AI 生成按钮 */
+.btn-ai {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  font-size: 14px; font-weight: 600;
+  color: var(--accent-gold);
+  background: rgba(212,168,67,0.08);
+  border: 1px solid rgba(212,168,67,0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.btn-ai:hover {
+  background: rgba(212,168,67,0.15);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 16px rgba(212,168,67,0.2);
+  transform: translateY(-1px);
+}
+.ai-btn-icon {
+  font-size: 16px;
+  background: linear-gradient(135deg, var(--accent-gold), #f0d060);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.ai-btn-text { display: inline; }
+
 /* Primary - Gold Fill */
 .btn-primary {
   background: linear-gradient(135deg, #D4A843, #B8912E);

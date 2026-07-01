@@ -1,5 +1,5 @@
 export default {
-  nav: { home: 'Home', about: 'About', products: 'Portfolio', contact: 'Contact', cta: 'Order Custom' },
+  nav: { home: 'Home', about: 'About', products: 'Portfolio', contact: 'Contact', cta: 'Order Custom', ai: 'AI Generate' },
   home: {
     heroTitle: 'Masterpiece Head Sculpture',
     heroSub: 'From realistic portraits to iconic characters — breathing life into every custom head sculpt',
@@ -91,6 +91,8 @@ export default {
     },
     success: { title: 'Submitted!', desc: 'We will contact you within 24 hours.', close: 'OK' },
     social: ['WeChat', 'Weibo', 'Bilibili'],
+    placeholder: 'Describe the head sculpt you want...',
+    hint: 'Press Enter to send · AI-generated images are for reference only',
   },
   validation: { required: 'Required', phone: 'Enter a valid phone number', nameMin: 'Name min 2 characters' },
   modal: { material: 'Material', size: 'Size', desc: 'Description', cta: 'Inquire Now', featured: 'Featured', clickToZoom: 'Click to zoom' },

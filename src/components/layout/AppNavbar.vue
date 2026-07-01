@@ -13,6 +13,11 @@
       </nav>
       <div class="nav-actions">
         <LanguageSwitcher />
+        <!-- AI 生成按钮 -->
+        <button class="btn btn-ai" @click="$emit('openAI')">
+          <span class="ai-btn-icon">✦</span>
+          <span class="ai-btn-text">{{ t('nav.ai') || 'AI 生成' }}</span>
+        </button>
         <router-link to="/contact" class="btn btn-primary btn-nav-cta">{{ t('nav.cta') }}</router-link>
       </div>
       <button class="menu-toggle" :class="{ active: mobileOpen }" @click="toggleMobile" aria-label="菜单">
@@ -25,6 +30,10 @@
     <router-link to="/about" class="nav-link" @click="closeMobile">{{ t('nav.about') }}</router-link>
     <router-link to="/products" class="nav-link" @click="closeMobile">{{ t('nav.products') }}</router-link>
     <router-link to="/contact" class="nav-link" @click="closeMobile">{{ t('nav.contact') }}</router-link>
+    <!-- 移动端 AI 按钮 -->
+    <button class="btn btn-ai btn-block" @click="closeMobile;$emit('openAI')" style="margin-top:12px;text-align:left">
+      ✦ {{ t('nav.ai') || 'AI 生成头雕设计' }}
+    </button>
     <router-link to="/contact" class="btn btn-primary btn-block btn-lg" style="margin-top:16px" @click="closeMobile">{{ t('nav.cta') }}</router-link>
     <div style="margin-top:16px"><LanguageSwitcher /></div>
   </div>
@@ -54,4 +63,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 function toggleMobile() { mobileOpen.value = !mobileOpen.value; document.body.style.overflow = mobileOpen.value ? 'hidden' : '' }
 function closeMobile() { mobileOpen.value = false; document.body.style.overflow = '' }
+
+defineEmits(['openAI'])
 </script>

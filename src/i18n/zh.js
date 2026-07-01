@@ -1,5 +1,5 @@
 export default {
-  nav: { home: '首页', about: '关于我们', products: '作品展示', contact: '联系我们', cta: '预约定制' },
+  nav: { home: '首页', about: '关于我们', products: '作品展示', contact: '联系我们', cta: '预约定制', ai: 'AI 生成' },
   home: {
     heroTitle: '极致头雕定制',
     heroSub: '从写实人像到影视角色，以精湛工艺赋予每一个头雕生命',
@@ -86,6 +86,10 @@ export default {
   products: {
     title: '作品展示', sub: '每一件作品，都是心血的凝聚',
     empty: '暂无该类别作品，敬请期待', videoTab: '视频展示', imageTab: '图片展示',
+  },
+  ai: {
+    placeholder: '描述您想要的头雕样式...',
+    hint: 'Enter 发送 · AI 生成仅供参考，实际作品以手工制作为准',
   },
   contact: {
     title: '联系我们', sub: '留下您的想法，我们为您实现',
