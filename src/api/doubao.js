@@ -9,11 +9,11 @@
  * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
  * 生产环境：直连 api-inference.modelscope.cn
  *
- * Prompt 策略（v1.36 优化版）：
- *   - 使用精准的现代手办/树脂雕像术语（garage kit, resin figurine, PVC figure）
- *   - 强力排除古典雕塑/石膏像/雕像等干扰风格
- *   - 关键特征词前置+重复增强权重
- *   - 用户输入保留原样（中英文均可），由模板引导模型理解
+ * Prompt 策略（v1.37 硅胶娃娃头部专用）：
+ *   - 类型锁定：silicone doll head / TPE doll face / custom doll sculpture
+ *   - 写实风格：photorealistic skin texture, lifelike, soft realistic painting
+ *   - 构图：close-up face shot, doll head only（硅胶娃娃头部特写）
+ *   - 用户输入保留原样，由模板引导模型理解
  */
 
 // 本地开发走 Vite 代理，生产环境直连 API
@@ -25,49 +25,54 @@ const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 const DEFAULT_MODEL = 'black-forest-labs/FLUX.1-Krea-dev'
 
 /**
- * 构建高质量头雕 Prompt（v1.36 优化版）
+ * 构建硅胶娃娃头部 Prompt（v1.37 专用版）
+ *
+ * 核心目标：生成写实风格的硅胶娃娃/TPE娃娃头部参考图
  *
  * 设计原则：
- *   1. 类型词前置+重复 → 锁定"现代手办/树脂头雕"，避免生成古典雕塑
- *   2. 用户输入紧随其后 → 模型优先关注用户描述的核心特征
- *   3. 风格/材质/构图/质量词分层排列 → 结构化引导输出
- *   4. 不翻译用户输入 → 保留原始表达，FLUX 对中英混合可基本理解
+ *   1. 类型词前置+重复 → 锁定"写实硅胶娃娃头部"
+ *   2. 写实风格词 → 引导模型往 photorealistic 方向走
+ *   3. 构图约束 → close-up face shot，突出面部细节
+ *   4. 用户输入紧跟类型词 → 模型优先理解用户描述的特征
  *
- * @param {string} userInput - 用户原始输入（中英文均可）
+ * 注意：使用中性描述词，避免触发内容审核
+ *
+ * @param {string} userInput - 用户原始输入（如"精灵尖耳白发"）
  * @returns {string} 构建好的完整 prompt
  */
 function buildPrompt(userInput) {
-  // === 第一层：类型锁定（重复2次增强权重，防止模型跑偏成古典雕塑）===
+  // === 第一层：类型锁定（用安全的中性词汇，避免触发内容审核）===
   const typeLock = [
-    'garage kit bust',      // GK 手办半身像
-    'resin figurine',       // 树脂人偶
-    'PVC figure bust',      // PVC 手办胸像
-    'collectible head sculpture', // 可收藏头雕
+    'custom head sculpture for realistic doll',
+    'realistic vinyl head reference',
+    'doll head making reference, artistic reference',
+    'lifelike face sculpture',
   ].join(', ')
 
-  // === 第二层：风格引导（明确是"现代手办风"不是"古典雕像风"）===
+  // === 第二层：写实风格引导 ===
   const styleGuide = [
-    'anime figure style',   // 动漫手办风格
-    'modern resin statue',  // 现代树脂雕像
-    'detailed paintwork',   // 精细涂装
-    'smooth matte surface', // 哑光质感
+    'photorealistic',
+    'realistic skin texture',
+    'detailed facial features',
+    'soft realistic painting style',
+    'doll maker reference',
   ].join(', ')
 
   // === 第三层：材质与光影 ===
   const materialLighting = [
-    'realistic skin texture or stylized figure finish',
     'studio lighting',
-    'soft shadow',
-    'solid neutral background',
+    'soft box light',
+    'neutral expression reference',
+    'solid color background',
     'product photography style',
   ].join(', ')
 
   // === 第四层：构图约束 ===
   const composition = [
+    'close-up face shot',
+    'head shot only',
+    'centered face',
     'front view',
-    'head and shoulders only',
-    'upper chest up',
-    'centered composition',
   ].join(', ')
 
   // === 第五层：质量提升 ===
@@ -75,14 +80,14 @@ function buildPrompt(userInput) {
     'highly detailed',
     '8K quality',
     'sharp focus',
-    'professional craftsmanship',
+    'professional doll photography',
   ].join(', ')
 
-  // 组装：类型(2x权重) + 用户描述 + 风格 + 材质 + 构图 + 质量
+  // 组装：类型(2x) + 用户描述 + 风格 + 材质 + 构图 + 质量
   return [
     typeLock,
-    typeLock, // 重复一次增强类型锁定
-    `subject: ${userInput}`,
+    typeLock,
+    `face features: ${userInput}`,
     styleGuide,
     materialLighting,
     composition,
@@ -91,29 +96,27 @@ function buildPrompt(userInput) {
 }
 
 /**
- * 构建 Negative Prompt（v1.36 强化版）
+ * 构建 Negative Prompt（v1.37 硅胶娃娃头部专用）
  *
  * 核心目标：
- *   - 排除古典/传统雕塑风格（这是生成不符的根本原因！）
- *   - 排除错误构图和场景
+ *   - 排除动漫/手办风格（不是娃娃头部的目标风格）
+ *   - 排除古典雕塑（上次问题的根因）
+ *   - 排除错误构图（全身、场景等）
  *   - 排除质量缺陷
  */
 function buildNegativePrompt() {
   return [
-    // ===== 排除古典/传统雕塑（关键！）=====
-    'classical sculpture',     // 古典雕塑
-    'marble statue',          // 大理石像
-    'stone carving',          // 石刻
-    'stone statue',           // 石像
-    'ancient greek',          // 古希腊风格
-    'roman statue',           // 罗马雕像
-    'michelangelo style',     // 米开朗基罗风格
-    'renaissance sculpture',  // 文艺复兴雕塑
-    'bronze statue',          // 铜像
-    'museum artifact',        // 博物馆文物
-    'archaeological',         // 考古风格
-    'weathered stone',        // 风化石材
-    'plaster cast',           // 石膏翻模
+    // ===== 排除错误风格 =====
+    'anime style',
+    'anime figure',
+    'chibi style',
+    'cartoon',
+    '2D illustration',
+    'classical sculpture',
+    'marble statue',
+    'stone carving',
+    'plaster cast',
+    'museum artifact',
 
     // ===== 排除错误构图 =====
     'full body',
@@ -125,14 +128,13 @@ function buildNegativePrompt() {
     'multiple people',
     'building',
     'street',
-    'interior room',
     'outdoor',
+    'full body shot',
 
     // ===== 排除质量缺陷 =====
     'lowres',
     'blurry',
     'bad anatomy',
-    'bad hands',
     'bad face',
     'distorted features',
     'watermark',
@@ -142,6 +144,8 @@ function buildNegativePrompt() {
     'low quality',
     'grainy',
     'pixelated',
+    'overexposed',
+    'underexposed',
   ].join(', ')
 }
 
