@@ -1,34 +1,24 @@
 /**
- * 豆包 AI 文生图 API 封装（直连模式）
+ * 豆包 AI 文生图 —— 通过 Cloudflare Worker 代理调用
  *
- * 模型：doubao-seedream-5-0-260128
- * 文档：https://api-doc.vncps.com/api-reference/image-generation
- *
- * 本地开发说明：
- *   如需绕过 CORS，可在 vite.config.js 配置 proxy：
- *   proxy: { '/api/doubao': { target: 'https://ark.cn-beijing.volces.com', changeOrigin: true, rewrite: ... } }
+ * Worker 地址在 .env 的 VITE_API_WORKER_URL 配置
+ * API Key 完全隐藏在 Worker 服务端，前端无感知
  */
 
-const API_URL = 'https://ark.cn-beijing.volces.com/v1/images/generations'
+const WORKER_URL = import.meta.env.VITE_API_WORKER_URL
 
 export async function generateHeadSculpt(prompt, opts = {}) {
-  const apiKey = import.meta.env.VITE_DOUBAO_API_KEY
-  if (!apiKey) {
-    throw new Error('AI 服务未配置 API Key，请联系管理员')
+  if (!WORKER_URL) {
+    throw new Error('AI 服务未配置，请联系管理员')
   }
 
-  const response = await fetch(API_URL, {
+  const response = await fetch(WORKER_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      prompt,
       model: opts.model || 'doubao-seedream-5-0-260128',
-      prompt: `头雕定制设计：${prompt}。风格：写实雕塑，精细工艺，收藏级品质。`,
       size: opts.size || '2K',
-      response_format: 'url',
-      watermark: false,
     }),
   })
 
@@ -36,18 +26,19 @@ export async function generateHeadSculpt(prompt, opts = {}) {
   const text = await response.text()
 
   if (!response.ok) {
-    let errMsg = `豆包 API 错误 (${response.status})`
+    let errMsg = `AI 生成失败 (${response.status})`
     try {
       const err = JSON.parse(text)
-      errMsg = err.error?.message || errMsg
+      errMsg = err.error || errMsg
     } catch {}
     throw new Error(errMsg)
   }
 
   try {
     const data = JSON.parse(text)
+    // Worker 返回 { data: [...] } 格式
     return data.data || []
   } catch {
-    throw new Error('API 返回数据格式异常，请稍后重试')
+    throw new Error('AI 服务返回数据格式异常，请稍后重试')
   }
 }
