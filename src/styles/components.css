@@ -1243,6 +1243,10 @@
   color: var(--accent-gold);
 }
 
+.footer-col > span {
+  display: block;
+}
+
 /* 微信链接 - 可点击弹图 */
 .wechat-link {
   cursor: pointer;
