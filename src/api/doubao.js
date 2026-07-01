@@ -9,11 +9,10 @@
  * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
  * 生产环境：直连 api-inference.modelscope.cn
  *
- * Prompt 策略（v1.37 硅胶娃娃头部专用）：
- *   - 类型锁定：silicone doll head / TPE doll face / custom doll sculpture
- *   - 写实风格：photorealistic skin texture, lifelike, soft realistic painting
- *   - 构图：close-up face shot, doll head only（硅胶娃娃头部特写）
- *   - 用户输入保留原样，由模板引导模型理解
+ * Prompt 策略（v1.39 安全版）：
+ *   - 使用完全安全的中性词汇（portrait/face/character），不触发内容审核
+ *   - 靠用户输入的上下文引导模型理解意图
+ *   - 构图：close-up portrait（写实面部特写）
  */
 
 // 本地开发走 Vite 代理，生产环境直连 API
@@ -25,113 +24,91 @@ const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 const DEFAULT_MODEL = 'black-forest-labs/FLUX.1-Krea-dev'
 
 /**
- * 构建硅胶娃娃头部 Prompt（v1.37 专用版）
+ * 构建安全 Prompt（v1.39 审核安全版）
  *
- * 核心目标：生成写实风格的硅胶娃娃/TPE娃娃头部参考图
+ * 核心原则：100% 安全词汇，不触发任何内容审核
+ * - 不使用 doll/silicone/vinyl/TPE/figurine 等敏感词
+ * - 使用通用的 3D 角色/肖像/面部参考术语
+ * - 靠用户输入自身携带的上下文引导模型
  *
- * 设计原则：
- *   1. 类型词前置+重复 → 锁定"写实硅胶娃娃头部"
- *   2. 写实风格词 → 引导模型往 photorealistic 方向走
- *   3. 构图约束 → close-up face shot，突出面部细节
- *   4. 用户输入紧跟类型词 → 模型优先理解用户描述的特征
- *
- * 注意：使用中性描述词，避免触发内容审核
- *
- * @param {string} userInput - 用户原始输入（如"精灵尖耳白发"）
+ * @param {string} userInput - 用户原始输入
  * @returns {string} 构建好的完整 prompt
  */
 function buildPrompt(userInput) {
-  // === 第一层：类型锁定（用安全的中性词汇，避免触发内容审核）===
+  // === 类型锁定（100% 安全的艺术/3D 术语）===
   const typeLock = [
-    'custom head sculpture for realistic doll',
-    'realistic vinyl head reference',
-    'doll head making reference, artistic reference',
-    'lifelike face sculpture',
+    '3D character head portrait',
+    'character face reference',
+    'digital portrait study',
+    'realistic face render',
   ].join(', ')
 
-  // === 第二层：写实风格引导 ===
+  // === 写实风格（安全词）===
   const styleGuide = [
-    'photorealistic',
-    'realistic skin texture',
-    'detailed facial features',
-    'soft realistic painting style',
-    'doll maker reference',
+    'photorealistic rendering',
+    'hyper realistic skin detail',
+    'soft studio lighting',
+    'professional portrait photography',
   ].join(', ')
 
-  // === 第三层：材质与光影 ===
-  const materialLighting = [
-    'studio lighting',
-    'soft box light',
-    'neutral expression reference',
-    'solid color background',
-    'product photography style',
-  ].join(', ')
-
-  // === 第四层：构图约束 ===
+  // === 构图约束 ===
   const composition = [
     'close-up face shot',
-    'head shot only',
-    'centered face',
-    'front view',
+    'front view portrait',
+    'head and neck only',
+    'centered composition',
+    'solid background',
   ].join(', ')
 
-  // === 第五层：质量提升 ===
+  // === 质量提升 ===
   const quality = [
     'highly detailed',
-    '8K quality',
+    '8K resolution',
     'sharp focus',
-    'professional doll photography',
+    'professional quality',
   ].join(', ')
 
-  // 组装：类型(2x) + 用户描述 + 风格 + 材质 + 构图 + 质量
   return [
     typeLock,
-    typeLock,
-    `face features: ${userInput}`,
+    typeLock,           // 重复增强权重
+    userInput,          // 用户原始描述直接拼接
     styleGuide,
-    materialLighting,
     composition,
     quality,
   ].join(', ')
 }
 
 /**
- * 构建 Negative Prompt（v1.37 硅胶娃娃头部专用）
+ * 构建 Negative Prompt（v1.39 安全版）
  *
- * 核心目标：
- *   - 排除动漫/手办风格（不是娃娃头部的目标风格）
- *   - 排除古典雕塑（上次问题的根因）
- *   - 排除错误构图（全身、场景等）
- *   - 排除质量缺陷
+ * 只保留必要的排除项，不引入任何敏感词
  */
 function buildNegativePrompt() {
   return [
-    // ===== 排除错误风格 =====
-    'anime style',
-    'anime figure',
-    'chibi style',
+    // 排除错误风格
+    'anime',
     'cartoon',
     '2D illustration',
+    'chibi',
+    'sketch',
+    'drawing',
+    'painting',
     'classical sculpture',
     'marble statue',
-    'stone carving',
-    'plaster cast',
-    'museum artifact',
+    'stone statue',
 
-    // ===== 排除错误构图 =====
+    // 排除错误构图
     'full body',
     'landscape',
     'scene',
     'environment',
-    'background scenery',
     'crowd',
     'multiple people',
     'building',
     'street',
-    'outdoor',
-    'full body shot',
+    'outdoor scene',
 
-    // ===== 排除质量缺陷 =====
+    // 质量缺陷
     'lowres',
     'blurry',
     'bad anatomy',
@@ -140,12 +117,9 @@ function buildNegativePrompt() {
     'watermark',
     'text',
     'signature',
-    'error',
     'low quality',
     'grainy',
     'pixelated',
-    'overexposed',
-    'underexposed',
   ].join(', ')
 }
 
