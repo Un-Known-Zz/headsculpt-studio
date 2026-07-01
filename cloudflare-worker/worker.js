@@ -19,15 +19,7 @@
 
 export default {
   async fetch(request, env) {
-    // 只允许 POST 请求
-    if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-        status: 405,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      })
-    }
-
-    // 处理 CORS 预检请求
+    // ⬇️ CORS 预检请求必须最先处理（浏览器发 POST 前会先发 OPTIONS）
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
@@ -36,6 +28,14 @@ export default {
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
         },
+      })
+    }
+
+    // 只允许 POST 请求
+    if (request.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       })
     }
 
