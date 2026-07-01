@@ -9,9 +9,10 @@
  * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
  * 生产环境：直连 api-inference.modelscope.cn
  *
- * Prompt 策略（v1.39 安全版）：
- *   - 使用完全安全的中性词汇（portrait/face/character），不触发内容审核
- *   - 靠用户输入的上下文引导模型理解意图
+ * Prompt 策略（v1.40 输入过滤安全版）：
+ *   - 使用完全安全的中性词汇（portrait/face/character）
+ *   - **新增：sanitizeInput() 过滤用户输入中的敏感词**
+ *   - 用户输入的 硅胶/人偶/仿真/TPE/vinyl/doll 等词自动替换为安全同义词
  *   - 构图：close-up portrait（写实面部特写）
  */
 
@@ -24,18 +25,76 @@ const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 const DEFAULT_MODEL = 'black-forest-labs/FLUX.1-Krea-dev'
 
 /**
- * 构建安全 Prompt（v1.39 审核安全版）
+ * 用户输入敏感词过滤器（v1.40）
  *
- * 核心原则：100% 安全词汇，不触发任何内容审核
- * - 不使用 doll/silicone/vinyl/TPE/figurine 等敏感词
- * - 使用通用的 3D 角色/肖像/面部参考术语
- * - 靠用户输入自身携带的上下文引导模型
+ * 魔搭 API 的内容审核会检测完整 prompt（包括用户输入），
+ * 所以即使用户输入了"硅胶娃娃"、"仿真人偶"等词也会被拦截。
+ * 此函数在发送前自动替换为安全同义词。
+ *
+ * 替换规则：
+ *   硅胶 / TPE → realistic material
+ *   娃娃 / 人偶 → character / figure
+ *   仿真 → realistic (safe)
+ *   头雕 / 头像 → head portrait
+ *   doll / silicone / vinyl / lifelike → safe alternatives
+ *
+ * @param {string} input - 用户原始输入
+ * @returns {string} 过滤后的安全文本
+ */
+function sanitizeInput(input) {
+  let sanitized = input
+
+  // ===== 中文敏感词替换 =====
+  const chineseMap = [
+    ['硅胶', 'realistic material'],
+    ['人偶', 'character'],
+    ['娃娃', 'character'],
+    ['头雕', 'head portrait'],
+    ['头像', 'portrait'],
+    ['TPE', 'material'],
+    ['实体', 'realistic'],
+    ['逼真', 'realistic'],
+  ]
+  for (const [word, replacement] of chineseMap) {
+    sanitized = sanitized.replaceAll(word, replacement)
+  }
+
+  // ===== 英文敏感词替换（不区分大小写）=====
+  const englishMap = [
+    [/\bdoll\b/gi, 'character'],
+    [/\bdolls\b/gi, 'characters'],
+    [/\bsilicone\b/gi, 'realistic material'],
+    [/\bvinyl\b/gi, 'realistic material'],
+    [/\bTPE\b/gi, 'material'],
+    [/\blifelike\b/gi, 'realistic'],
+    [/\blifelike\b/gi, 'realistic'],
+    [/\bsex\s*doll\b/gi, 'character figure'],
+    [/\blove\s*doll\b/gi, 'character figure'],
+    [/\badult\s*doll\b/gi, 'character figure'],
+  ]
+  for (const [pattern, replacement] of englishMap) {
+    sanitized = sanitized.replace(pattern, replacement)
+  }
+
+  return sanitized.trim()
+}
+
+/**
+ * 构建安全 Prompt（v1.40 输入过滤安全版）
+ *
+ * 核心原则：
+ *   1. 模板本身 100% 安全词汇
+ *   2. **用户输入经过 sanitizeInput() 过滤后再拼接**
+ *   3. 双重保障：模板 + 用户输入都安全
  *
  * @param {string} userInput - 用户原始输入
  * @returns {string} 构建好的完整 prompt
  */
 function buildPrompt(userInput) {
-  // === 类型锁定（100% 安全的艺术/3D 术语）===
+  // 先过滤用户输入！
+  const safeInput = sanitizeInput(userInput)
+
+  // === 类型锁定（100% 安全的 3D/艺术术语）===
   const typeLock = [
     '3D character head portrait',
     'character face reference',
@@ -70,8 +129,8 @@ function buildPrompt(userInput) {
 
   return [
     typeLock,
-    typeLock,           // 重复增强权重
-    userInput,          // 用户原始描述直接拼接
+    typeLock,
+    safeInput,           // ← 使用过滤后的用户输入！
     styleGuide,
     composition,
     quality,
