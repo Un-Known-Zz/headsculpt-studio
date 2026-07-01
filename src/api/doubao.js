@@ -8,6 +8,12 @@
  *
  * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
  * 生产环境：直连 api-inference.modelscope.cn
+ *
+ * Prompt 策略（v1.36 优化版）：
+ *   - 使用精准的现代手办/树脂雕像术语（garage kit, resin figurine, PVC figure）
+ *   - 强力排除古典雕塑/石膏像/雕像等干扰风格
+ *   - 关键特征词前置+重复增强权重
+ *   - 用户输入保留原样（中英文均可），由模板引导模型理解
  */
 
 // 本地开发走 Vite 代理，生产环境直连 API
@@ -17,6 +23,127 @@ const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 
 // 默认使用 FLUX.1-Krea-dev（高质量文生图模型）
 const DEFAULT_MODEL = 'black-forest-labs/FLUX.1-Krea-dev'
+
+/**
+ * 构建高质量头雕 Prompt（v1.36 优化版）
+ *
+ * 设计原则：
+ *   1. 类型词前置+重复 → 锁定"现代手办/树脂头雕"，避免生成古典雕塑
+ *   2. 用户输入紧随其后 → 模型优先关注用户描述的核心特征
+ *   3. 风格/材质/构图/质量词分层排列 → 结构化引导输出
+ *   4. 不翻译用户输入 → 保留原始表达，FLUX 对中英混合可基本理解
+ *
+ * @param {string} userInput - 用户原始输入（中英文均可）
+ * @returns {string} 构建好的完整 prompt
+ */
+function buildPrompt(userInput) {
+  // === 第一层：类型锁定（重复2次增强权重，防止模型跑偏成古典雕塑）===
+  const typeLock = [
+    'garage kit bust',      // GK 手办半身像
+    'resin figurine',       // 树脂人偶
+    'PVC figure bust',      // PVC 手办胸像
+    'collectible head sculpture', // 可收藏头雕
+  ].join(', ')
+
+  // === 第二层：风格引导（明确是"现代手办风"不是"古典雕像风"）===
+  const styleGuide = [
+    'anime figure style',   // 动漫手办风格
+    'modern resin statue',  // 现代树脂雕像
+    'detailed paintwork',   // 精细涂装
+    'smooth matte surface', // 哑光质感
+  ].join(', ')
+
+  // === 第三层：材质与光影 ===
+  const materialLighting = [
+    'realistic skin texture or stylized figure finish',
+    'studio lighting',
+    'soft shadow',
+    'solid neutral background',
+    'product photography style',
+  ].join(', ')
+
+  // === 第四层：构图约束 ===
+  const composition = [
+    'front view',
+    'head and shoulders only',
+    'upper chest up',
+    'centered composition',
+  ].join(', ')
+
+  // === 第五层：质量提升 ===
+  const quality = [
+    'highly detailed',
+    '8K quality',
+    'sharp focus',
+    'professional craftsmanship',
+  ].join(', ')
+
+  // 组装：类型(2x权重) + 用户描述 + 风格 + 材质 + 构图 + 质量
+  return [
+    typeLock,
+    typeLock, // 重复一次增强类型锁定
+    `subject: ${userInput}`,
+    styleGuide,
+    materialLighting,
+    composition,
+    quality,
+  ].join(', ')
+}
+
+/**
+ * 构建 Negative Prompt（v1.36 强化版）
+ *
+ * 核心目标：
+ *   - 排除古典/传统雕塑风格（这是生成不符的根本原因！）
+ *   - 排除错误构图和场景
+ *   - 排除质量缺陷
+ */
+function buildNegativePrompt() {
+  return [
+    // ===== 排除古典/传统雕塑（关键！）=====
+    'classical sculpture',     // 古典雕塑
+    'marble statue',          // 大理石像
+    'stone carving',          // 石刻
+    'stone statue',           // 石像
+    'ancient greek',          // 古希腊风格
+    'roman statue',           // 罗马雕像
+    'michelangelo style',     // 米开朗基罗风格
+    'renaissance sculpture',  // 文艺复兴雕塑
+    'bronze statue',          // 铜像
+    'museum artifact',        // 博物馆文物
+    'archaeological',         // 考古风格
+    'weathered stone',        // 风化石材
+    'plaster cast',           // 石膏翻模
+
+    // ===== 排除错误构图 =====
+    'full body',
+    'landscape',
+    'scene',
+    'environment',
+    'background scenery',
+    'crowd',
+    'multiple people',
+    'building',
+    'street',
+    'interior room',
+    'outdoor',
+
+    // ===== 排除质量缺陷 =====
+    'lowres',
+    'blurry',
+    'bad anatomy',
+    'bad hands',
+    'bad face',
+    'distorted features',
+    'watermark',
+    'text',
+    'signature',
+    'error',
+    'low quality',
+    'grainy',
+    'pixelated',
+  ].join(', ')
+}
 
 /**
  * 提交图片生成任务（异步）
@@ -40,11 +167,11 @@ async function submitTask(prompt, opts = {}) {
     headers,
     body: JSON.stringify({
       model,
-      prompt: `Professional head sculpture bust, portrait figurine of: ${prompt}. Studio lighting, high detail 3D render, realistic sculpture texture, collectible quality figure photography, solid color background, front view of head and shoulders only.`,
-      negative_prompt: 'scene, landscape, environment, background, full body, lowres, bad anatomy, bad hands, text, error, watermark, blurry, low quality, multiple people, crowd, building, street',
+      prompt: buildPrompt(prompt),
+      negative_prompt: buildNegativePrompt(),
       size: opts.size || '1024x1024',
-      steps: opts.steps || 20,
-      guidance: opts.guidance || 3.5,
+      steps: opts.steps || 25,
+      guidance: opts.guidance || 4.0,
       seed: opts.seed || undefined,
       n: opts.n || 1,
     }),
