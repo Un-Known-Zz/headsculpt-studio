@@ -1,43 +1,61 @@
 /**
- * 豆包 AI 文生图 —— 通过 Vercel Serverless 代理调用
+ * 魔搭 Z-Image-Turbo 文生图 API 封装
  *
- * API 地址在 .env 的 VITE_API_WORKER_URL 配置
- * 格式示例：https://你的项目名.vercel.app/api/generate
- * API Key 完全隐藏在服务端环境变量中，前端无感知
+ * 认证：Header 携带 MODELSCOPE_API_TOKEN 环境变量（Vite 注入）
+ * 端点：https://api-inference.modelscope.cn/v1/images/generations
+ * 免费额度：2000次/天，国内直连无 CORS 问题
  */
 
-const API_URL = import.meta.env.VITE_API_WORKER_URL
+const API_URL = 'https://api-inference.modelscope.cn/v1/images/generations'
+const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 
 export async function generateHeadSculpt(prompt, opts = {}) {
-  if (!API_URL) {
+  if (!TOKEN) {
     throw new Error('AI 服务未配置，请联系管理员')
   }
 
+  const sizeMap = {
+    '1:1':  '1024x1024',
+    '16:9': '2048x1152',
+    '9:16': '1152x2048',
+    '4:3':  '2048x1536',
+    '3:4':  '1536x2048',
+    '2:3':  '1365x2048',
+  }
+  const size = sizeMap[opts.ratio] || opts.size || '1024x1024'
+
   const response = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${TOKEN}`,
+    },
     body: JSON.stringify({
-      prompt,
-      model: opts.model || 'doubao-seedream-5-0-260128',
-      size: opts.size || '2K',
+      model: 'Tongyi-MAI/Z-Image-Turbo',
+      prompt: `头雕定制设计：${prompt}。风格：写实雕塑，精细工艺，收藏级品质，3D渲染，工作室灯光。`,
+      size,
+      n: opts.n || 1,
+      response_format: 'url',
     }),
   })
 
-  // 读取响应体（无论成功失败）
   const text = await response.text()
 
   if (!response.ok) {
     let errMsg = `AI 生成失败 (${response.status})`
     try {
       const err = JSON.parse(text)
-      errMsg = err.error || errMsg
+      errMsg = err.error?.message || err.message || errMsg
     } catch {}
     throw new Error(errMsg)
   }
 
   try {
     const data = JSON.parse(text)
-    return data.data || []
+    return (data.data || []).map(item => ({
+      url: item.url,
+      b64_json: item.b64_json || null,
+    }))
   } catch {
     throw new Error('AI 服务返回数据格式异常，请稍后重试')
   }
