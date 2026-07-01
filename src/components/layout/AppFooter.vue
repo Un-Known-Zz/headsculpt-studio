@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>{{ t('footer.copyright') }} 1.32</span>
+        <span>{{ t('footer.copyright') }} 1.33</span>
       </div>
     </div>
     <!-- 微信二维码弹窗 -->
