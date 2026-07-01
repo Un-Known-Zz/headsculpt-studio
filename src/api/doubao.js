@@ -43,7 +43,7 @@ async function submitTask(prompt, opts = {}) {
       prompt: `Professional head sculpture bust, portrait figurine of: ${prompt}. Studio lighting, high detail 3D render, realistic sculpture texture, collectible quality figure photography, solid color background, front view of head and shoulders only.`,
       negative_prompt: 'scene, landscape, environment, background, full body, lowres, bad anatomy, bad hands, text, error, watermark, blurry, low quality, multiple people, crowd, building, street',
       size: opts.size || '1024x1024',
-      steps: opts.steps || 30,
+      steps: opts.steps || 20,
       guidance: opts.guidance || 3.5,
       seed: opts.seed || undefined,
       n: opts.n || 1,
@@ -87,7 +87,7 @@ async function submitTask(prompt, opts = {}) {
  * @param {object} options - { interval: number(ms), timeout: number(ms) }
  */
 async function pollTask(taskId, options = {}) {
-  const { interval = 3000, timeout = 120000 } = options
+  const { interval = 4000, timeout = 300000 } = options
   const startTime = Date.now()
 
   while (Date.now() - startTime < timeout) {
@@ -140,7 +140,7 @@ async function pollTask(taskId, options = {}) {
     }
   }
 
-  throw new Error('生成超时（120秒），请稍后重试')
+  throw new Error('生成超时（5分钟），服务器繁忙，请稍后重试')
 }
 
 /**
