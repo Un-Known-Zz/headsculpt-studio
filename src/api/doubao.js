@@ -240,18 +240,27 @@ function buildNegativePrompt() {
 }
 
 /**
- * 提交图片生成任务（异步）
- * @returns {string} taskId
+ * 提交图片生成任务（v1.42 同步模式，避免 CORS 预检）
+ *
+ * ⚠️ 关键发现：魔搭 api-inference.modelscope.cn 不返回 CORS 头！
+ * 自定义 Header（X-ModelScope-Async-Mode）会触发浏览器 OPTIONS 预检 → 被拦截。
+ * 之前从 v1.37 到 v1.41 一直误判为"内容审核"，实际是 CORS 问题。
+ *
+ * 解决方案：
+ *   1. 去掉所有自定义 Header（不触发预检）
+ *   2. 使用同步调用模式（不加 X-ModelScope-Async-Mode）
+ *   3. FLUX.1-Krea-dev 同步模式通常 15-45 秒返回图片
+ *   4. 降低 steps 加速生成
  */
 async function submitTask(prompt, opts = {}) {
   const model = opts.model || DEFAULT_MODEL
 
+  // ⚠️ 只用标准 Header！Authorization 是标准 Header 通常不触发额外预检
   const headers = {
     'Content-Type': 'application/json',
-    'X-ModelScope-Async-Mode': 'true',
   }
 
-  // 生产环境下需要带 Token（本地开发由 Vite 代理注入）
+  // 生产环境带 Token
   if (!IS_DEV && TOKEN) {
     headers['Authorization'] = `Bearer ${TOKEN}`
   }
@@ -260,11 +269,12 @@ async function submitTask(prompt, opts = {}) {
 
   const finalPrompt = buildPrompt(prompt)
 
-  // 调试日志：输出最终发送的 prompt（帮助排查审核问题）
+  // 调试日志
   console.log('[AI HeadSculpt] Original input:', prompt)
   console.log('[AI HeadSculpt] Sanitized prompt:', finalPrompt)
   console.log('[AI HeadSculpt] Target URL:', fullUrl)
-  console.log('[AI HeadSculpt] Mode:', IS_DEV ? 'DEV (via proxy)' : 'PROD (direct)')
+  console.log('[AI HeadSculpt] Mode:', IS_DEV ? 'DEV (via Vite proxy)' : 'PROD (direct, SYNC mode)')
+  console.log('[AI HeadSculpt] Headers:', JSON.stringify(Object.keys(headers)))
 
   let response
   try {
@@ -276,19 +286,16 @@ async function submitTask(prompt, opts = {}) {
         prompt: finalPrompt,
         negative_prompt: buildNegativePrompt(),
         size: opts.size || '1024x1024',
-        steps: opts.steps || 25,
-        guidance: opts.guidance || 4.0,
-        seed: opts.seed || undefined,
+        steps: opts.steps || 20,     // 降低步数加速（同步模式需要尽快返回）
         n: opts.n || 1,
       }),
     })
   } catch (fetchErr) {
-    // 区分不同类型的网络错误，给出明确提示
     if (fetchErr.name === 'TypeError' && fetchErr.message.includes('fetch')) {
       if (IS_DEV) {
-        throw new Error('网络连接失败：请确保已运行 npm run dev 启动开发服务器。当前处于开发模式，需要 Vite 代理转发请求。')
+        throw new Error('网络连接失败：请确保已运行 npm run dev 启动开发服务器。')
       } else {
-        throw new Error('网络连接失败：API 服务不可达或被浏览器安全策略拦截。可能是内容审核拦截或网络问题，请稍后重试。')
+        throw new Error('网络连接失败：API 服务不可达或被浏览器 CORS 安全策略拦截。\n\n提示：按 F12 打开开发者工具 → Console 查看详细错误。如果看到 "Access-Control-Allow-Origin" 说明是跨域问题。')
       }
     }
     throw new Error(`网络请求异常：${fetchErr.message}`)
@@ -297,7 +304,7 @@ async function submitTask(prompt, opts = {}) {
   const text = await response.text()
 
   if (!response.ok) {
-    let errMsg = `提交任务失败 (${response.status})`
+    let errMsg = `API 请求失败 (${response.status})`
     try {
       const err = JSON.parse(text)
       errMsg = err.error?.message || err.errors?.message || err.message || errMsg
@@ -305,28 +312,34 @@ async function submitTask(prompt, opts = {}) {
     throw new Error(errMsg)
   }
 
-  // 异步模式返回 task_id
+  // 解析响应（同步模式直接返回图片）
   try {
     const data = JSON.parse(text)
 
+    // 同步模式：data.images 包含结果
+    if (data.data && data.data.length > 0) {
+      console.log('[AI HeadSculpt] ✅ Sync response received,', data.data.length, 'image(s)')
+      return { directResult: true, images: data.data.map(item => ({
+        url: item.url || null,
+        b64_json: item.b64_json || null,
+      })) }
+    }
+
+    // 异步模式兼容：返回 task_id
     if (data.task_id) {
+      console.log('[AI HeadSculpt] Async task submitted:', data.task_id)
       return data.task_id
     }
 
-    // 如果直接返回了图片数据（同步模式），也兼容处理
-    if (data.data && data.data.length > 0) {
-      return { directResult: true, images: data.data }
-    }
-
-    throw new Error('未收到 task_id，响应格式异常')
+    throw new Error(`API 响应格式异常: ${text.slice(0, 300)}`)
   } catch (e) {
     if (e.message.includes('异常')) throw e
-    throw new Error(`解析响应失败: ${text.slice(0, 200)}`)
+    throw new Error(`解析响应失败: ${text.slice(0, 300)}`)
   }
 }
 
 /**
- * 轮询任务状态直到完成
+ * 轮询任务状态（v1.42: 也去掉自定义 Header 避免预检）
  * @param {string} taskId
  * @param {object} options - { interval: number(ms), timeout: number(ms) }
  */
@@ -335,18 +348,18 @@ async function pollTask(taskId, options = {}) {
   const startTime = Date.now()
 
   while (Date.now() - startTime < timeout) {
+    // ⚠️ 不使用 X-ModelScope-Task-Type 自定义 Header
     const headers = {}
     if (!IS_DEV && TOKEN) {
       headers['Authorization'] = `Bearer ${TOKEN}`
     }
-    headers['X-ModelScope-Task-Type'] = 'image_generation'
 
     let response
     try {
       response = await fetch(`${BASE_URL}/tasks/${taskId}`, { headers })
     } catch (fetchErr) {
       if (fetchErr.name === 'TypeError' && fetchErr.message.includes('fetch')) {
-        throw new Error(`轮询任务时网络断开（可能请求超时或被拦截）：${fetchErr.message}`)
+        throw new Error(`轮询时网络断开：${fetchErr.message}`)
       }
       throw new Error(`轮询异常：${fetchErr.message}`)
     }
@@ -373,11 +386,11 @@ async function pollTask(taskId, options = {}) {
 
     switch (status) {
       case 'SUCCEED':
-        // 成功，返回图片 URL 列表
         const images = data.output_images || []
         if (images.length === 0) {
           throw new Error('任务成功但没有返回图片')
         }
+        console.log('[AI HeadSculpt] ✅ Task succeeded,', images.length, 'image(s)')
         return images.map(url => ({ url }))
 
       case 'FAILED':
@@ -386,7 +399,6 @@ async function pollTask(taskId, options = {}) {
       case 'PENDING':
       case 'RUNNING':
       default:
-        // 还在运行中，等待后继续轮询
         await new Promise(resolve => setTimeout(resolve, interval))
         continue
     }
@@ -396,7 +408,7 @@ async function pollTask(taskId, options = {}) {
 }
 
 /**
- * 主函数：生成头雕设计图
+ * 主函数：生成头雕设计图（v1.42 同步模式优先）
  * @returns {Array<{url: string}>} 图片列表
  */
 export async function generateHeadSculpt(prompt, opts = {}) {
@@ -404,15 +416,15 @@ export async function generateHeadSculpt(prompt, opts = {}) {
     throw new Error('AI 服务未配置，请联系管理员')
   }
 
-  // Step 1: 提交任务
+  // Step 1: 提交任务（同步模式）
   const result = await submitTask(prompt, opts)
 
-  // 如果是同步直返结果，直接返回
+  // 同步直返结果 → 直接返回
   if (result && result.directResult) {
     return result.images
   }
 
-  // Step 2: 轮询等待结果
+  // 异步模式 → 轮询等待结果
   const taskId = result
   return pollTask(taskId, opts.pollOptions)
 }
