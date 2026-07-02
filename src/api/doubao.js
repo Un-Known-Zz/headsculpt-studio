@@ -9,7 +9,7 @@
  * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
  * 生产环境：直连 api-inference.modelscope.cn
  *
- * Prompt 策略（v1.40 输入过滤安全版）：
+ * Prompt 策略（v1.41 全英文化安全版）：
  *   - 使用完全安全的中性词汇（portrait/face/character）
  *   - **新增：sanitizeInput() 过滤用户输入中的敏感词**
  *   - 用户输入的 硅胶/人偶/仿真/TPE/vinyl/doll 等词自动替换为安全同义词
@@ -25,58 +25,115 @@ const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 const DEFAULT_MODEL = 'black-forest-labs/FLUX.1-Krea-dev'
 
 /**
- * 用户输入敏感词过滤器（v1.40）
+ * 用户输入敏感词过滤器（v1.41 全英文化版）
  *
- * 魔搭 API 的内容审核会检测完整 prompt（包括用户输入），
- * 所以即使用户输入了"硅胶娃娃"、"仿真人偶"等词也会被拦截。
- * 此函数在发送前自动替换为安全同义词。
+ * 核心策略变更：不仅替换敏感词，而是将所有中文描述翻译成英文。
+ * 魔搭内容审核对中文更敏感，全英文 prompt 更安全。
  *
- * 替换规则：
- *   硅胶 / TPE → realistic material
- *   娃娃 / 人偶 → character / figure
- *   仿真 → realistic (safe)
- *   头雕 / 头像 → head portrait
- *   doll / silicone / vinyl / lifelike → safe alternatives
+ * 处理流程：
+ *   1. 替换已知的敏感/高风险中文词 → 英文同义词
+ *   2. 替换常见的面部/外观描述中文词 → 英文
+ *   3. 替换风格/特征类中文词 → 英文
  *
- * @param {string} input - 用户原始输入
- * @returns {string} 过滤后的安全文本
+ * @param {string} input - 用户原始输入（中英文混合）
+ * @returns {string} 全英文的安全文本
  */
 function sanitizeInput(input) {
   let sanitized = input
 
-  // ===== 中文敏感词替换 =====
-  const chineseMap = [
+  // ===== 第一层：高风险敏感词（必须最先替换）=====
+  const sensitiveMap = [
     ['硅胶', 'realistic material'],
+    ['仿真', 'realistic'],
+    ['逼真', 'realistic'],
     ['人偶', 'character'],
     ['娃娃', 'character'],
     ['头雕', 'head portrait'],
     ['头像', 'portrait'],
     ['TPE', 'material'],
     ['实体', 'realistic'],
-    ['逼真', 'realistic'],
+    ['充气', 'inflatable'],  // 防止相关联想
   ]
-  for (const [word, replacement] of chineseMap) {
+  for (const [word, replacement] of sensitiveMap) {
     sanitized = sanitized.replaceAll(word, replacement)
   }
 
-  // ===== 英文敏感词替换（不区分大小写）=====
-  const englishMap = [
+  // ===== 第二层：面部/身体特征中文词 → 英文 =====
+  const featureMap = [
+    ['少女', 'young woman'],
+    ['女孩', 'girl'],
+    ['女性', 'female'],
+    ['男性', 'male'],
+    ['少年', 'young man'],
+    ['儿童', 'child'],
+    ['脸', 'face'],
+    ['面容', 'face'],
+    ['面孔', 'face'],
+    ['皮肤', 'skin'],
+    ['肤质', 'skin texture'],
+    ['细腻皮肤', 'smooth skin'],
+    ['白皙皮肤', 'fair skin'],
+    ['瞳孔', 'eyes'],
+    ['眼睛', 'eyes'],
+    ['眼眸', 'eyes'],
+    ['长发', 'long hair'],
+    ['短发', 'short hair'],
+    ['白发', 'white hair'],
+    ['黑发', 'black hair'],
+    ['金发', 'blonde hair'],
+    ['银发', 'silver hair'],
+    ['尖耳', 'pointed ears'],
+    ['耳朵', 'ears'],
+    ['嘴唇', 'lips'],
+    ['鼻子', 'nose'],
+    ['五官', 'facial features'],
+  ]
+  for (const [word, replacement] of featureMap) {
+    sanitized = sanitized.replaceAll(word, replacement)
+  }
+
+  // ===== 第三层：风格/氛围中文词 → 英文 =====
+  const styleMap = [
+    ['奇幻风格', 'fantasy style'],
+    ['奇幻', 'fantasy'],
+    ['动漫风格', 'anime style'],
+    ['动漫', 'anime'],
+    ['二次元', '2D anime'],
+    ['写实风格', 'realistic style'],
+    ['写实', 'realistic'],
+    ['可爱', 'cute'],
+    ['美丽', 'beautiful'],
+    ['漂亮', 'pretty'],
+    ['精致', 'delicate'],
+    ['细腻', 'detailed'],
+    ['干净背景', 'clean background'],
+    ['纯色背景', 'solid color background'],
+  ]
+  for (const [word, replacement] of styleMap) {
+    sanitized = sanitized.replaceAll(word, replacement)
+  }
+
+  // ===== 第四层：英文敏感词（不区分大小写）=====
+  const englishPatterns = [
     [/\bdoll\b/gi, 'character'],
     [/\bdolls\b/gi, 'characters'],
     [/\bsilicone\b/gi, 'realistic material'],
     [/\bvinyl\b/gi, 'realistic material'],
     [/\bTPE\b/gi, 'material'],
     [/\blifelike\b/gi, 'realistic'],
-    [/\blifelike\b/gi, 'realistic'],
     [/\bsex\s*doll\b/gi, 'character figure'],
     [/\blove\s*doll\b/gi, 'character figure'],
     [/\badult\s*doll\b/gi, 'character figure'],
+    [/\binflatable\b/gi, 'figure'],
   ]
-  for (const [pattern, replacement] of englishMap) {
+  for (const [pattern, replacement] of englishPatterns) {
     sanitized = sanitized.replace(pattern, replacement)
   }
 
-  return sanitized.trim()
+  // 清理多余空格
+  sanitized = sanitized.replace(/\s+/g, ' ').trim()
+
+  return sanitized
 }
 
 /**
@@ -201,6 +258,14 @@ async function submitTask(prompt, opts = {}) {
 
   const fullUrl = `${BASE_URL}/images/generations`
 
+  const finalPrompt = buildPrompt(prompt)
+
+  // 调试日志：输出最终发送的 prompt（帮助排查审核问题）
+  console.log('[AI HeadSculpt] Original input:', prompt)
+  console.log('[AI HeadSculpt] Sanitized prompt:', finalPrompt)
+  console.log('[AI HeadSculpt] Target URL:', fullUrl)
+  console.log('[AI HeadSculpt] Mode:', IS_DEV ? 'DEV (via proxy)' : 'PROD (direct)')
+
   let response
   try {
     response = await fetch(fullUrl, {
@@ -208,7 +273,7 @@ async function submitTask(prompt, opts = {}) {
       headers,
       body: JSON.stringify({
         model,
-        prompt: buildPrompt(prompt),
+        prompt: finalPrompt,
         negative_prompt: buildNegativePrompt(),
         size: opts.size || '1024x1024',
         steps: opts.steps || 25,
