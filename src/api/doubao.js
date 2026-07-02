@@ -1,24 +1,26 @@
 /**
- * 魔搭 ModelScope 文生图 API 封装（异步任务模式）
+ * 魔搭 ModelScope 文生图 API 封装（v1.43 CORS代理模式）
  *
- * 认证：Header Authorization: Bearer {TOKEN}
- * 端点：
- *   - 提交任务: POST /v1/images/generations（需 X-ModelScope-Async-Mode: true）
- *   - 查询结果: GET /v1/tasks/{taskId}（需 X-ModelScope-Task-Type: image_generation）
+ * ⚠️ 核心矛盾（已解决）：
+ *   FLUX.1-Krea-dev 强制要求异步模式（需 X-ModelScope-Async-Mode Header）
+ *   但该自定义 Header 触发浏览器 CORS OPTIONS 预检 → 魔搭不返回 CORS 头 → 预检失败
  *
- * 开发环境：通过 Vite 代理 /api/modelscope 转发，绕过 CORS
- * 生产环境：直连 api-inference.modelscope.cn
+ * ✅ 解决方案：通过公共 CORS 代理中转请求
+ *   浏览器 → corsproxy.io（有CORS头）→ 魐搭API（服务端通信无CORS限制）
+ *
+ * 开发环境：Vite 代理 /api/modelscope 转发
+ * 生产环境：corsproxy.io 公共代理中转
  *
  * Prompt 策略（v1.41 全英文化安全版）：
- *   - 使用完全安全的中性词汇（portrait/face/character）
- *   - **新增：sanitizeInput() 过滤用户输入中的敏感词**
- *   - 用户输入的 硅胶/人偶/仿真/TPE/vinyl/doll 等词自动替换为安全同义词
- *   - 构图：close-up portrait（写实面部特写）
+ *   - sanitizeInput() 过滤用户输入中的敏感词，100% 英文 prompt
  */
 
-// 本地开发走 Vite 代理，生产环境直连 API
+// 本地开发走 Vite 代理，生产环境走 CORS 代理
 const IS_DEV = import.meta.env.DEV
-const BASE_URL = IS_DEV ? '/api/modelscope/v1' : 'https://api-inference.modelscope.cn/v1'
+const MODELSCOPE_API = 'https://api-inference.modelscope.cn/v1'
+// ⭐ 生产环境使用 CORS 代理中转（解决自定义Header的预检问题）
+const CORS_PROXY = 'https://corsproxy.io/'
+const BASE_URL = IS_DEV ? '/api/modelscope/v1' : `${CORS_PROXY}${MODELSCOPE_API}`
 const TOKEN = import.meta.env.VITE_MODELSCOPE_API_TOKEN
 
 // 默认使用 FLUX.1-Krea-dev（高质量文生图模型）
@@ -240,24 +242,18 @@ function buildNegativePrompt() {
 }
 
 /**
- * 提交图片生成任务（v1.42 同步模式，避免 CORS 预检）
+ * 提交图片生成任务（v1.43 通过CORS代理 + 异步模式）
  *
- * ⚠️ 关键发现：魔搭 api-inference.modelscope.cn 不返回 CORS 头！
- * 自定义 Header（X-ModelScope-Async-Mode）会触发浏览器 OPTIONS 预检 → 被拦截。
- * 之前从 v1.37 到 v1.41 一直误判为"内容审核"，实际是 CORS 问题。
- *
- * 解决方案：
- *   1. 去掉所有自定义 Header（不触发预检）
- *   2. 使用同步调用模式（不加 X-ModelScope-Async-Mode）
- *   3. FLUX.1-Krea-dev 同步模式通常 15-45 秒返回图片
- *   4. 降低 steps 加速生成
+ * 通过 corsproxy.io 代理中转请求，可以安全使用自定义 Header。
+ * FLUX.1-Krea-dev 必须使用异步模式（X-ModelScope-Async-Mode: true）。
  */
 async function submitTask(prompt, opts = {}) {
   const model = opts.model || DEFAULT_MODEL
 
-  // ⚠️ 只用标准 Header！Authorization 是标准 Header 通常不触发额外预检
+  // 完整 Header（通过代理中转，不再受浏览器CORS限制）
   const headers = {
     'Content-Type': 'application/json',
+    'X-ModelScope-Async-Mode': 'true',   // FLUX 强制要求异步模式
   }
 
   // 生产环境带 Token
@@ -266,14 +262,13 @@ async function submitTask(prompt, opts = {}) {
   }
 
   const fullUrl = `${BASE_URL}/images/generations`
-
   const finalPrompt = buildPrompt(prompt)
 
   // 调试日志
   console.log('[AI HeadSculpt] Original input:', prompt)
   console.log('[AI HeadSculpt] Sanitized prompt:', finalPrompt)
   console.log('[AI HeadSculpt] Target URL:', fullUrl)
-  console.log('[AI HeadSculpt] Mode:', IS_DEV ? 'DEV (via Vite proxy)' : 'PROD (direct, SYNC mode)')
+  console.log('[AI HeadSculpt] Mode:', IS_DEV ? 'DEV (via Vite proxy)' : `PROD (via ${CORS_PROXY})`)
   console.log('[AI HeadSculpt] Headers:', JSON.stringify(Object.keys(headers)))
 
   let response
@@ -286,7 +281,7 @@ async function submitTask(prompt, opts = {}) {
         prompt: finalPrompt,
         negative_prompt: buildNegativePrompt(),
         size: opts.size || '1024x1024',
-        steps: opts.steps || 20,     // 降低步数加速（同步模式需要尽快返回）
+        steps: opts.steps || 20,
         n: opts.n || 1,
       }),
     })
@@ -295,7 +290,7 @@ async function submitTask(prompt, opts = {}) {
       if (IS_DEV) {
         throw new Error('网络连接失败：请确保已运行 npm run dev 启动开发服务器。')
       } else {
-        throw new Error('网络连接失败：API 服务不可达或被浏览器 CORS 安全策略拦截。\n\n提示：按 F12 打开开发者工具 → Console 查看详细错误。如果看到 "Access-Control-Allow-Origin" 说明是跨域问题。')
+        throw new Error(`网络连接失败：无法连接到 API 服务或代理。\n\n可能原因：\n1. CORS 代理服务暂时不可用\n2. 魔搭API异常\n3. 网络问题\n请稍后重试。`)
       }
     }
     throw new Error(`网络请求异常：${fetchErr.message}`)
@@ -305,30 +300,27 @@ async function submitTask(prompt, opts = {}) {
 
   if (!response.ok) {
     let errMsg = `API 请求失败 (${response.status})`
-    try {
-      const err = JSON.parse(text)
-      errMsg = err.error?.message || err.errors?.message || err.message || errMsg
-    } catch {}
+    try { const err = JSON.parse(text); errMsg = err.error?.message || err.message || errMsg; } catch {}
+    if (text.includes('<html') || text.includes('<!DOCTYPE')) {
+      errMsg = `CORS代理返回错误 (${response.status})，可能代理暂时不可用，请稍后重试。`
+    }
     throw new Error(errMsg)
   }
 
-  // 解析响应（同步模式直接返回图片）
+  // 解析响应
   try {
     const data = JSON.parse(text)
 
-    // 同步模式：data.images 包含结果
+    if (data.task_id) {
+      console.log('[AI HeadSculpt] ✅ Async task submitted:', data.task_id)
+      return data.task_id
+    }
+
     if (data.data && data.data.length > 0) {
       console.log('[AI HeadSculpt] ✅ Sync response received,', data.data.length, 'image(s)')
       return { directResult: true, images: data.data.map(item => ({
-        url: item.url || null,
-        b64_json: item.b64_json || null,
+        url: item.url || null, b64_json: item.b64_json || null,
       })) }
-    }
-
-    // 异步模式兼容：返回 task_id
-    if (data.task_id) {
-      console.log('[AI HeadSculpt] Async task submitted:', data.task_id)
-      return data.task_id
     }
 
     throw new Error(`API 响应格式异常: ${text.slice(0, 300)}`)
@@ -339,20 +331,18 @@ async function submitTask(prompt, opts = {}) {
 }
 
 /**
- * 轮询任务状态（v1.42: 也去掉自定义 Header 避免预检）
- * @param {string} taskId
- * @param {object} options - { interval: number(ms), timeout: number(ms) }
+ * 轮询任务状态（v1.43 通过CORS代理）
  */
 async function pollTask(taskId, options = {}) {
   const { interval = 4000, timeout = 300000 } = options
   const startTime = Date.now()
 
   while (Date.now() - startTime < timeout) {
-    // ⚠️ 不使用 X-ModelScope-Task-Type 自定义 Header
     const headers = {}
     if (!IS_DEV && TOKEN) {
       headers['Authorization'] = `Bearer ${TOKEN}`
     }
+    headers['X-ModelScope-Task-Type'] = 'image_generation'
 
     let response
     try {
@@ -368,39 +358,23 @@ async function pollTask(taskId, options = {}) {
 
     if (!response.ok) {
       let errMsg = `查询任务失败 (${response.status})`
-      try {
-        const err = JSON.parse(text)
-        errMsg = err.error?.message || err.message || errMsg
-      } catch {}
+      try { const err = JSON.parse(text); errMsg = err.error?.message || err.message || errMsg; } catch {}
       throw new Error(errMsg)
     }
 
     let data
-    try {
-      data = JSON.parse(text)
-    } catch {
-      throw new Error('任务状态响应格式异常')
-    }
+    try { data = JSON.parse(text); } catch { throw new Error('任务状态响应格式异常') }
 
-    const status = data.task_status
-
-    switch (status) {
+    switch (data.task_status) {
       case 'SUCCEED':
         const images = data.output_images || []
-        if (images.length === 0) {
-          throw new Error('任务成功但没有返回图片')
-        }
+        if (images.length === 0) throw new Error('任务成功但没有返回图片')
         console.log('[AI HeadSculpt] ✅ Task succeeded,', images.length, 'image(s)')
         return images.map(url => ({ url }))
-
       case 'FAILED':
         throw new Error(data.message || '生成任务执行失败')
-
-      case 'PENDING':
-      case 'RUNNING':
       default:
         await new Promise(resolve => setTimeout(resolve, interval))
-        continue
     }
   }
 
@@ -408,23 +382,18 @@ async function pollTask(taskId, options = {}) {
 }
 
 /**
- * 主函数：生成头雕设计图（v1.42 同步模式优先）
- * @returns {Array<{url: string}>} 图片列表
+ * 主函数：生成头雕设计图
  */
 export async function generateHeadSculpt(prompt, opts = {}) {
   if (!TOKEN && !IS_DEV) {
     throw new Error('AI 服务未配置，请联系管理员')
   }
 
-  // Step 1: 提交任务（同步模式）
   const result = await submitTask(prompt, opts)
 
-  // 同步直返结果 → 直接返回
   if (result && result.directResult) {
     return result.images
   }
 
-  // 异步模式 → 轮询等待结果
-  const taskId = result
-  return pollTask(taskId, opts.pollOptions)
+  return pollTask(result, opts.pollOptions)
 }
